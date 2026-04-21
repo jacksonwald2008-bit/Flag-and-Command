@@ -58,6 +58,9 @@ class Game {
   resize() {
     this.canvas.width  = window.innerWidth;
     this.canvas.height = window.innerHeight;
+    if (this.state === GAME_STATE.DEPLOYMENT || this.state === GAME_STATE.BATTLE) {
+      this.camera.fitToScreen();
+    }
     this.camera.clamp();
   }
 
@@ -77,8 +80,7 @@ class Game {
     } else if (newState === GAME_STATE.DEPLOYMENT) {
       document.getElementById('battle-ui').style.display   = 'block';
       document.getElementById('deploy-hint').style.display = 'block';
-      this.camera.centerOn(750, 750);
-      this.camera.scale = 0.55;
+      this.camera.fitToScreen();
     } else if (newState === GAME_STATE.BATTLE) {
       document.getElementById('battle-ui').style.display = 'block';
       this.battleTimer = 0;

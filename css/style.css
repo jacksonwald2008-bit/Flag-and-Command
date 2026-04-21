@@ -1,14 +1,9 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
-  width: 100%;
-  height: 100%;
+  width: 100%; height: 100%;
   overflow: hidden;
-  background: #111;
+  background: #0a0c10;
   font-family: 'Georgia', serif;
   color: #ddd;
 }
@@ -21,7 +16,9 @@ html, body {
   cursor: crosshair;
 }
 
-/* ============ ARMY BUILDER ============ */
+/* ═══════════════════════════════════════════
+   ARMY BUILDER
+═══════════════════════════════════════════ */
 #army-builder {
   position: fixed;
   inset: 0;
@@ -35,296 +32,335 @@ html, body {
 }
 
 .ab-header { text-align: center; margin-bottom: 22px; }
-.ab-title  { font-size: 36px; letter-spacing: 6px; color: #ddaa00; font-family: 'Georgia', serif; text-shadow: 0 0 20px rgba(221,170,0,0.4); }
-.ab-sub    { color: #888; font-size: 14px; letter-spacing: 2px; margin-top: 4px; }
+.ab-title  {
+  font-size: 36px; letter-spacing: 6px; color: #ddaa00;
+  text-shadow: 0 0 20px rgba(221,170,0,0.4);
+}
+.ab-sub { color: #888; font-size: 14px; letter-spacing: 2px; margin-top: 4px; }
 
 .ab-body {
-  display: flex;
-  gap: 18px;
-  width: 100%;
-  max-width: 1100px;
-  flex: 1;
+  display: flex; gap: 18px;
+  width: 100%; max-width: 1100px; flex: 1;
 }
-
 .ab-col   { display: flex; flex-direction: column; }
 .ab-left  { width: 240px; flex-shrink: 0; }
 .ab-center{ flex: 1; min-width: 0; }
 .ab-right { width: 260px; flex-shrink: 0; }
 
 .ab-section-title {
-  font-size: 11px;
-  letter-spacing: 2px;
-  color: #888;
+  font-size: 11px; letter-spacing: 2px; color: #888;
   text-transform: uppercase;
   border-bottom: 1px solid #333;
-  padding-bottom: 4px;
-  margin-bottom: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  padding-bottom: 4px; margin-bottom: 10px;
+  display: flex; justify-content: space-between; align-items: center;
 }
+#ab-soldier-count { font-size: 13px; color: #ddaa00; letter-spacing: 0; }
 
-#ab-soldier-count {
-  font-size: 13px;
-  color: #ddaa00;
-  letter-spacing: 0;
-}
-
-/* Faction buttons */
 .ab-factions      { display: flex; flex-wrap: wrap; gap: 6px; }
 .ab-faction-btn {
   padding: 7px 14px;
-  background: #1e2330;
-  border: 1px solid #333;
-  color: #ccc;
-  cursor: pointer;
-  font-size: 13px;
-  font-family: 'Georgia', serif;
+  background: #1e2330; border: 1px solid #333;
+  color: #ccc; cursor: pointer;
+  font-size: 13px; font-family: 'Georgia', serif;
   transition: all 0.15s;
 }
 .ab-faction-btn:hover    { border-color: #666; color: #fff; }
 .ab-faction-btn.selected { background: #2a3520; border-color: #ddaa00; color: #ddaa00; }
 
-/* Roster */
-.ab-roster       { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; max-height: 380px; }
+.ab-roster { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; max-height: 380px; }
 .ab-roster-item {
-  display: flex;
-  align-items: center;
-  background: #1a1e2a;
-  border: 1px solid #2a2e3a;
-  padding: 6px 8px;
-  cursor: pointer;
+  display: flex; align-items: center;
+  background: #1a1e2a; border: 1px solid #2a2e3a;
+  padding: 6px 8px; cursor: pointer;
   transition: background 0.1s;
 }
 .ab-roster-item:hover { background: #22283a; border-color: #444; }
 .ab-unit-name { flex: 1; font-size: 13px; }
 .ab-unit-info { font-size: 11px; color: #666; margin-right: 8px; }
 .ab-add-btn {
-  background: #2a4a2a;
-  border: 1px solid #3a6a3a;
-  color: #6abb6a;
-  width: 24px; height: 24px;
-  cursor: pointer;
-  font-size: 16px;
-  line-height: 1;
+  background: #2a4a2a; border: 1px solid #3a6a3a;
+  color: #6abb6a; width: 24px; height: 24px;
+  cursor: pointer; font-size: 16px; line-height: 1;
 }
 .ab-add-btn:hover { background: #3a6a3a; }
 
-/* Army list */
-.ab-army-list { flex: 1; overflow-y: auto; background: #13171f; border: 1px solid #252a38; padding: 6px; }
-.ab-army-row  {
-  display: flex;
-  align-items: center;
-  padding: 5px 6px;
-  border-bottom: 1px solid #1e2230;
-  font-size: 13px;
-  gap: 8px;
+.ab-army-list {
+  flex: 1; overflow-y: auto;
+  background: #13171f; border: 1px solid #252a38; padding: 6px;
+}
+.ab-army-row {
+  display: flex; align-items: center;
+  padding: 5px 6px; border-bottom: 1px solid #1e2230;
+  font-size: 13px; gap: 8px;
 }
 .ab-army-row span:first-child { flex: 1; }
 .ab-remove-btn {
-  background: none;
-  border: none;
-  color: #664444;
-  cursor: pointer;
-  font-size: 12px;
-  padding: 2px 5px;
+  background: none; border: none; color: #664444;
+  cursor: pointer; font-size: 12px; padding: 2px 5px;
 }
 .ab-remove-btn:hover { color: #dd4444; }
 
-/* Action buttons */
 .ab-actions { display: flex; gap: 10px; margin-top: 12px; }
-.ab-btn     {
-  flex: 1;
-  padding: 10px;
-  font-size: 13px;
-  font-family: 'Georgia', serif;
-  cursor: pointer;
-  border: 1px solid;
-  letter-spacing: 1px;
-  transition: all 0.15s;
+.ab-btn {
+  flex: 1; padding: 10px; font-size: 13px;
+  font-family: 'Georgia', serif; cursor: pointer;
+  border: 1px solid; letter-spacing: 1px; transition: all 0.15s;
 }
 .ab-btn-danger  { background: #2a1a1a; border-color: #664444; color: #cc6666; }
 .ab-btn-danger:hover  { background: #3a2222; }
 .ab-btn-primary { background: #1a2a1a; border-color: #446644; color: #66cc66; }
 .ab-btn-primary:hover { background: #223322; border-color: #ddaa00; color: #ddaa00; }
 
-/* Map list */
 .ab-map-list  { display: flex; flex-direction: column; gap: 5px; }
 .ab-map-item  {
-  padding: 7px 10px;
-  background: #1a1e2a;
-  border: 1px solid #2a2e3a;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.12s;
+  padding: 7px 10px; background: #1a1e2a; border: 1px solid #2a2e3a;
+  cursor: pointer; font-size: 13px; transition: all 0.12s;
 }
 .ab-map-item strong { display: block; color: #ccc; margin-bottom: 2px; }
 .ab-map-item span   { font-size: 11px; color: #666; }
 .ab-map-item:hover  { border-color: #555; }
 .ab-map-item.selected { border-color: #ddaa00; background: #1f2218; }
 
-/* Stats panel */
 .ab-stats-panel { background: #13171f; border: 1px solid #252a38; padding: 10px; font-size: 13px; }
-.ab-stat-name   { color: #ddaa00; font-size: 14px; margin-bottom: 8px; font-family: 'Georgia', serif; }
+.ab-stat-name   { color: #ddaa00; font-size: 14px; margin-bottom: 8px; }
 .ab-stat-table  { width: 100%; border-collapse: collapse; }
 .ab-stat-table td { padding: 3px 5px; font-size: 12px; }
 .ab-stat-table td:first-child { color: #888; }
 .ab-stat-table td:last-child  { color: #ccc; text-align: right; }
 
-/* ============ BATTLE UI ============ */
-#battle-ui { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+/* ═══════════════════════════════════════════
+   BATTLE UI — full-screen overlay
+═══════════════════════════════════════════ */
+#battle-ui {
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
 
-/* Top bar */
+/* ── Top-right: timer + speed controls ── */
 #battle-topbar {
   position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 46px;
-  background: rgba(10,12,20,0.85);
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  display: flex;
-  align-items: center;
-  padding: 0 14px;
-  gap: 20px;
+  top: 10px; right: 14px;
+  display: flex; align-items: center; gap: 8px;
   pointer-events: auto;
 }
 
-.tb-morale { flex: 1; font-size: 13px; }
-.tb-timer  { font-family: monospace; font-size: 18px; color: #ccc; letter-spacing: 2px; }
-.tb-speeds { display: flex; gap: 5px; }
+.tb-timer {
+  font-family: monospace; font-size: 20px;
+  color: #ddd; letter-spacing: 3px;
+  background: rgba(0,0,0,0.55);
+  padding: 4px 12px; border: 1px solid rgba(255,255,255,0.1);
+}
 
+.tb-speeds { display: flex; gap: 4px; }
 .speed-btn {
-  padding: 4px 10px;
-  background: rgba(30,35,50,0.9);
-  border: 1px solid #333;
-  color: #aaa;
-  cursor: pointer;
-  font-size: 12px;
+  padding: 5px 12px;
+  background: rgba(15,18,28,0.85);
+  border: 1px solid #2a2e3a;
+  color: #888; cursor: pointer; font-size: 13px;
   pointer-events: auto;
+  transition: all 0.1s;
 }
 .speed-btn:hover  { border-color: #666; color: #fff; }
-.speed-btn.active { background: rgba(40,60,30,0.9); border-color: #ddaa00; color: #ddaa00; }
+.speed-btn.active { background: rgba(30,40,20,0.9); border-color: #ddaa00; color: #ddaa00; }
 
-/* Left roster sidebar */
-#battle-roster {
-  position: absolute;
-  top: 46px;
-  left: 0;
-  width: 190px;
-  bottom: 0;
-  background: rgba(10,12,20,0.80);
-  border-right: 1px solid rgba(255,255,255,0.08);
-  overflow-y: auto;
-  padding: 6px 0;
-  pointer-events: auto;
-}
-
-.roster-unit {
-  padding: 6px 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  cursor: pointer;
-  transition: background 0.1s;
-}
-.roster-unit:hover    { background: rgba(255,255,255,0.05); }
-.roster-unit.selected { background: rgba(255,238,0,0.08); border-left: 2px solid #ffee00; }
-.roster-unit.shattered{ opacity: 0.4; }
-
-.ru-name  { font-size: 12px; color: #ccc; }
-.ru-count { font-size: 10px; color: #888; margin-bottom: 2px; }
-.ru-morale-bg { height: 3px; background: #1a1e2a; margin-bottom: 2px; }
-.ru-morale-fill { height: 100%; transition: width 0.3s; }
-.ru-state { font-size: 10px; }
-
-/* Right enemy panel */
-#enemy-panel {
-  position: absolute;
-  top: 46px;
-  right: 0;
-  width: 150px;
-  background: rgba(10,12,20,0.80);
-  border-left: 1px solid rgba(255,255,255,0.08);
-  padding: 10px;
-  pointer-events: none;
-}
-
-/* Selected unit detail */
+/* ── Top-left: selected unit detail ── */
 #unit-detail {
   position: absolute;
-  bottom: 14px;
-  left: 200px;
-  width: 220px;
-  background: rgba(10,12,20,0.88);
+  top: 10px; left: 14px;
+  width: 210px;
+  background: rgba(8,10,18,0.88);
   border: 1px solid rgba(255,255,255,0.12);
   padding: 10px 12px;
   font-size: 12px;
   display: none;
   pointer-events: none;
 }
-.ud-title { font-size: 14px; color: #ddaa00; margin-bottom: 8px; font-family: 'Georgia', serif; }
+.ud-title { font-size: 14px; color: #ddaa00; margin-bottom: 8px; }
 .ud-row   { display: flex; justify-content: space-between; margin-bottom: 3px; color: #aaa; }
 .ud-row span:last-child { color: #ddd; }
-.ud-morale-bar { height: 4px; background: #1a1e2a; margin: 6px 0; border-radius: 2px; overflow: hidden; }
+.ud-bar   { height: 4px; background: #1a1e2a; margin: 5px 0; border-radius: 2px; overflow: hidden; }
 
-/* Deployment hint */
+/* ── Top-right below topbar: enemy panel ── */
+#enemy-panel {
+  position: absolute;
+  top: 56px; right: 14px;
+  width: 160px;
+  background: rgba(8,10,18,0.80);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 8px 10px;
+  font-size: 12px;
+  pointer-events: none;
+}
+.ep-label    { font-size: 10px; letter-spacing: 2px; color: #666; margin-bottom: 4px; }
+.ep-strength { font-size: 14px; font-weight: bold; margin-bottom: 4px; }
+.ep-bar-bg   { height: 3px; background: #1a1e2a; margin-bottom: 3px; }
+.ep-bar-fill { height: 100%; background: #2255bb; }
+.ep-units    { font-size: 11px; color: #666; }
+
+/* ═══════════════════════════════════════════
+   UNIT CARD BAR — bottom, Total War style
+═══════════════════════════════════════════ */
+#unit-card-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 110px;
+  background: linear-gradient(to top, rgba(4,5,10,0.97) 70%, rgba(4,5,10,0.75) 100%);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  pointer-events: auto;
+}
+
+/* Hide scrollbar but still scrollable */
+#unit-card-bar::-webkit-scrollbar { height: 3px; }
+#unit-card-bar::-webkit-scrollbar-track { background: transparent; }
+#unit-card-bar::-webkit-scrollbar-thumb { background: #333; }
+
+.unit-card {
+  flex-shrink: 0;
+  width: 78px; height: 96px;
+  background: rgba(14,17,26,0.95);
+  border: 1px solid #2a2e3a;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5px 4px 4px;
+  gap: 2px;
+  transition: border-color 0.1s;
+  position: relative;
+  user-select: none;
+}
+
+.unit-card:hover { border-color: #555; }
+
+.unit-card.selected {
+  border-color: #ddaa00;
+  background: rgba(30,28,10,0.95);
+  box-shadow: 0 0 8px rgba(221,170,0,0.25);
+}
+
+.unit-card.routing {
+  border-color: #882222;
+  background: rgba(20,8,8,0.95);
+}
+
+.unit-card.shattered {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* Unit type badge at top of card */
+.uc-type {
+  width: 100%;
+  text-align: center;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  color: #fff;
+  background: rgba(255,255,255,0.08);
+  padding: 2px 0;
+  border-radius: 1px;
+  font-family: 'Georgia', serif;
+}
+
+.unit-card.selected .uc-type {
+  background: rgba(221,170,0,0.18);
+  color: #ffdd77;
+}
+
+/* Unit name */
+.uc-name {
+  font-size: 10px;
+  color: #ccc;
+  text-align: center;
+  line-height: 1.2;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 2px;
+}
+
+/* Soldier count */
+.uc-count {
+  font-size: 10px;
+  color: #888;
+  font-family: monospace;
+}
+
+/* Morale bar */
+.uc-morale-bg {
+  width: 100%; height: 4px;
+  background: #1a1e2a;
+  margin-top: 1px;
+}
+.uc-morale-fill {
+  height: 100%;
+  transition: width 0.4s, background 0.4s;
+}
+
+/* Status text */
+.uc-state {
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+/* ── Deployment hint ── */
 #deploy-hint {
   position: absolute;
-  top: 56px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(10,12,20,0.90);
+  top: 14px; left: 50%; transform: translateX(-50%);
+  background: rgba(8,10,18,0.92);
   border: 1px solid #ddaa00;
   padding: 8px 20px;
-  font-size: 13px;
-  color: #ddaa00;
-  letter-spacing: 1px;
+  font-size: 13px; color: #ddaa00; letter-spacing: 1px;
   pointer-events: auto;
-  display: none;
-  z-index: 20;
+  white-space: nowrap;
 }
 #begin-battle-btn {
-  display: inline-block;
-  margin-left: 16px;
+  display: inline-block; margin-left: 16px;
   padding: 5px 16px;
-  background: #2a3520;
-  border: 1px solid #ddaa00;
-  color: #ddaa00;
-  cursor: pointer;
-  font-size: 13px;
-  font-family: 'Georgia', serif;
+  background: #2a3520; border: 1px solid #ddaa00;
+  color: #ddaa00; cursor: pointer;
+  font-size: 13px; font-family: 'Georgia', serif;
 }
 #begin-battle-btn:hover { background: #3a4a30; }
 
-/* ============ END SCREEN ============ */
+/* ═══════════════════════════════════════════
+   END SCREEN
+═══════════════════════════════════════════ */
 #end-screen {
-  position: fixed;
-  inset: 0;
+  position: fixed; inset: 0;
   background: rgba(0,0,0,0.72);
   display: none;
-  align-items: center;
-  justify-content: center;
+  align-items: center; justify-content: center;
   z-index: 200;
   pointer-events: auto;
 }
-
 .end-box {
   background: #1a1a2a;
   border: 2px solid #ddaa00;
   padding: 40px 50px;
-  min-width: 380px;
-  text-align: center;
+  min-width: 380px; text-align: center;
 }
-.end-box h2  { font-size: 32px; margin-bottom: 8px; font-family: 'Georgia', serif; }
-.end-type    { font-size: 18px; color: #aaa; margin-bottom: 20px; font-family: 'Georgia', serif; }
+.end-box h2  { font-size: 32px; margin-bottom: 8px; }
+.end-type    { font-size: 18px; color: #aaa; margin-bottom: 20px; }
 .end-stats   { font-size: 14px; color: #888; line-height: 2; margin-bottom: 24px; }
 .end-stats strong { color: #ccc; }
 .end-btns    { display: flex; gap: 14px; justify-content: center; }
 .end-btn {
   padding: 10px 24px;
-  background: #1a2a1a;
-  border: 1px solid #446644;
-  color: #66cc66;
-  cursor: pointer;
-  font-size: 14px;
-  font-family: 'Georgia', serif;
+  background: #1a2a1a; border: 1px solid #446644;
+  color: #66cc66; cursor: pointer;
+  font-size: 14px; font-family: 'Georgia', serif;
   transition: all 0.15s;
 }
 .end-btn:hover { background: #223322; border-color: #ddaa00; color: #ddaa00; }
