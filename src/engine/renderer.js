@@ -3,7 +3,7 @@ import {
   WORLD_W, WORLD_H, DEPLOY_ZONE_PLAYER, DEPLOY_ZONE_AI, SS, RANK_DEPTH,
 } from '../constants.js';
 
-const TERRAIN_BG    = '#a8d66e';
+const TERRAIN_BG    = '#7ec850'; // brighter cartoon grass
 const SELECTION_CLR = '#ffee00';
 const FLAG_STEADY    = '#22bb44';
 const FLAG_WAVERING  = '#ddaa00';
@@ -216,106 +216,100 @@ export class Renderer {
     const max        = unit.maxCount;
     const aliveRatio = max > 0 ? alive / max : 0;
     const teamColor  = TEAM_COLORS[unit.team];
+    const darkColor  = _darkenHex(teamColor);
 
-    // Formation size in screen pixels — enforce readable minimums
-    const fw = Math.max(42, cam.wLen(unit.frontWidth + 4));
-    const fh = Math.max(14 * ranks, cam.wLen(ranks * RANK_DEPTH + 2));
+    // Formation size in screen pixels
+    const perRank  = Math.max(4, Math.min(14, Math.round(alive / ranks / (max / ranks / 8))));
+    const fw       = Math.max(52, cam.wLen(unit.frontWidth + 4));
+    const fh       = Math.max(20 * ranks, cam.wLen(ranks * RANK_DEPTH + 2));
 
-    // Draw formation block in rotation-local space
     ctx.save();
     ctx.translate(sx, sy);
     ctx.rotate(unit.facing);
 
-    // Dead-zone background
-    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    // ── Ground shadow beneath formation ──
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.fillRect(-fw / 2 + 2, -fh / 2 + 2, fw, fh);
+
+    // ── Formation ground plate ──
+    ctx.fillStyle = 'rgba(180,140,80,0.28)';
     ctx.fillRect(-fw / 2, -fh / 2, fw, fh);
 
-    // Alive fill (team color, shrinks left-to-right as casualties mount)
-    ctx.fillStyle = teamColor;
-    ctx.globalAlpha = 0.55;
-    ctx.fillRect(-fw / 2, -fh / 2, fw * aliveRatio, fh);
-    ctx.globalAlpha = 1;
-
-    // Rank dividers
-    for (let r = 1; r < ranks; r++) {
-      ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-      ctx.lineWidth   = 1;
-      ctx.beginPath();
-      ctx.moveTo(-fw / 2, -fh / 2 + r * (fh / ranks));
-      ctx.lineTo( fw / 2, -fh / 2 + r * (fh / ranks));
-      ctx.stroke();
-    }
-
-    // Soldier figures: fixed count distributed evenly in screen space
-    const perRank  = Math.max(3, Math.min(12, Math.floor(fw / 9)));
-    const totalVis = perRank * ranks;
-    const aliveVis = Math.round(totalVis * aliveRatio);
-
-    for (let i = 0; i < aliveVis; i++) {
-      const rank = Math.floor(i / perRank);
-      const file = i % perRank;
-      const px   = -fw / 2 + (file + 0.5) * (fw / perRank);
-      const py   = -fh / 2 + (rank + 0.38) * (fh / ranks);
-
-      // Body
-      ctx.fillStyle = teamColor;
-      ctx.fillRect(px - 2.5, py, 5, 7);
-
-      // Head
-      ctx.fillStyle = '#f0c090';
-      ctx.beginPath();
-      ctx.arc(px, py - 2, 3, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Border
-    ctx.strokeStyle = selected ? SELECTION_CLR : 'rgba(255,255,255,0.22)';
+    // ── Formation border ──
+    ctx.strokeStyle = selected ? SELECTION_CLR : 'rgba(0,0,0,0.5)';
     ctx.lineWidth   = selected ? 2.5 : 1;
     ctx.strokeRect(-fw / 2, -fh / 2, fw, fh);
+    if (selected) {
+      ctx.strokeStyle = SELECTION_CLR;
+      ctx.globalAlpha = 0.3;
+      ctx.lineWidth   = 6;
+      ctx.strokeRect(-fw / 2, -fh / 2, fw, fh);
+      ctx.globalAlpha = 1;
+      ctx.lineWidth   = 2;
+      ctx.strokeRect(-fw / 2, -fh / 2, fw, fh);
+    }
+
+    // ── Cartoon soldiers ──
+    const visPerRank = Math.max(3, Math.min(14, Math.floor(fw / 11)));
+    const totalVis   = visPerRank * ranks;
+    const aliveVis   = Math.round(totalVis * aliveRatio);
+
+    for (let i = 0; i < aliveVis; i++) {
+      const rank = Math.floor(i / visPerRank);
+      const file = i % visPerRank;
+      const px   = -fw / 2 + (file + 0.5) * (fw / visPerRank);
+      const py   = -fh / 2 + (rank + 0.5) * (fh / ranks);
+      _drawCartoonSoldier(ctx, px, py, teamColor, darkColor);
+    }
 
     ctx.restore();
 
-    // Flag — place it at the front-centre of the formation
+    // ── Flag at formation front ──
     const cos   = Math.cos(unit.facing);
     const sin   = Math.sin(unit.facing);
-    const flagX = sx + sin * (fh / 2 + 5);
-    const flagY = sy - cos * (fh / 2 + 5);
+    const flagX = sx + sin * (fh / 2 + 6);
+    const flagY = sy - cos * (fh / 2 + 6);
     this._drawFlag(unit, flagX, flagY);
   }
 
   _drawFlag(unit, sx, sy) {
-    const ctx  = this.ctx;
-    const cam  = this.camera;
-    const h    = Math.max(10, cam.wLen(6));
-    const w    = Math.max(7, cam.wLen(4));
-    const pct  = unit.aliveCount / unit.maxCount;
-    const col  = _moraleColor(unit.moraleState);
+    const ctx = this.ctx;
+    const h   = 16;   // fixed pixel height — always visible
+    const w   = 11;
+    const pct = unit.aliveCount / unit.maxCount;
+    const col = _moraleColor(unit.moraleState);
 
-    // Pole
-    ctx.strokeStyle = '#5a3a10';
-    ctx.lineWidth   = 1.5;
+    // Pole — black outline then brown
+    ctx.lineWidth   = 3.5;
+    ctx.strokeStyle = '#111';
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx, sy - h);
+    ctx.stroke();
+    ctx.lineWidth   = 2;
+    ctx.strokeStyle = '#7a4e18';
     ctx.beginPath();
     ctx.moveTo(sx, sy);
     ctx.lineTo(sx, sy - h);
     ctx.stroke();
 
-    // Flag rectangle (torn if < 50% strength)
+    // Flag cloth — black outline then fill
+    ctx.fillStyle = '#111';
+    ctx.fillRect(sx + 1, sy - h - 1, w + 2, Math.round(h * 0.6) + 2);
     ctx.fillStyle = col;
-    ctx.beginPath();
-    if (pct < 0.5) {
-      // Tattered — irregular edge
-      ctx.moveTo(sx, sy - h);
-      ctx.lineTo(sx + w, sy - h + h * 0.2);
-      ctx.lineTo(sx + w * 0.6, sy - h + h * 0.5);
-      ctx.lineTo(sx + w, sy - h + h * 0.8);
-      ctx.lineTo(sx, sy - h * 0.3);
+    if (pct < 0.45) {
+      // Tattered
+      ctx.beginPath();
+      ctx.moveTo(sx + 2, sy - h);
+      ctx.lineTo(sx + 2 + w, sy - h + h * 0.15);
+      ctx.lineTo(sx + 2 + w * 0.55, sy - h + h * 0.38);
+      ctx.lineTo(sx + 2 + w, sy - h + h * 0.55);
+      ctx.lineTo(sx + 2, sy - h + h * 0.4);
+      ctx.closePath();
+      ctx.fill();
     } else {
-      ctx.rect(sx, sy - h, w, h * 0.55);
+      ctx.fillRect(sx + 2, sy - h, w, Math.round(h * 0.58));
     }
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-    ctx.lineWidth = 0.5;
-    ctx.stroke();
   }
 
   _drawMiniFlag(unit, sx, sy) {
@@ -336,16 +330,19 @@ export class Renderer {
     const sx  = cam.wx(unit.x);
     const sy  = cam.wy(unit.y);
 
-    const barW = Math.max(20, cam.wLen(unit.frontWidth * 0.6 + 10));
-    const barH = 4;
+    // Fixed screen-space size so it's always readable
+    const barW = Math.max(44, cam.wLen(unit.frontWidth + 4));
+    const barH = 5;
     const bx   = sx - barW / 2;
-    const by   = sy + Math.max(10, cam.wLen(12));
+    const by   = sy + Math.max(14, cam.wLen(unit.stats.ranks * RANK_DEPTH / 2 + 2)) + 4;
 
-    // Background
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    // Black outline
+    ctx.fillStyle = '#111';
     ctx.fillRect(bx - 1, by - 1, barW + 2, barH + 2);
-
-    // Fill
+    // Dark bg
+    ctx.fillStyle = 'rgba(20,20,20,0.8)';
+    ctx.fillRect(bx, by, barW, barH);
+    // Morale fill
     const pct = Math.max(0, unit.morale / unit.maxMorale);
     ctx.fillStyle = _moraleBarColor(unit.moraleState);
     ctx.fillRect(bx, by, barW * pct, barH);
@@ -582,4 +579,73 @@ function _drawButton(ctx, x, y, w, h, label, bg) {
   ctx.font       = '13px sans-serif';
   ctx.textAlign  = 'center';
   ctx.fillText(label, x + w / 2, y + h / 2 + 5);
+}
+
+// ── Cartoon soldier sprite (Fire & Maneuver style) ──────────────────
+// Drawn in formation-local screen coords (px, py = centre of soldier slot)
+function _drawCartoonSoldier(ctx, px, py, uniformColor, darkColor) {
+  const bw = 6;    // body width
+  const bh = 10;   // body height
+  const hr = 4.5;  // head radius
+  const hh = 5;    // shako (hat) height
+  const hw = 5;    // shako half-width
+
+  const bodyTop = py - bh * 0.5;
+  const headCY  = bodyTop - hr + 1;
+  const hatBot  = headCY - hr + 1;
+  const hatTop  = hatBot - hh;
+
+  // ── Black outlines (drawn 1-1.5px larger) ──
+  ctx.fillStyle = '#111';
+  // Hat outline
+  ctx.fillRect(px - hw - 1, hatTop - 1, (hw + 1) * 2, hh + 1.5);
+  // Head outline
+  ctx.beginPath();
+  ctx.arc(px, headCY, hr + 1.2, 0, Math.PI * 2);
+  ctx.fill();
+  // Body outline
+  ctx.fillRect(px - bw / 2 - 1, bodyTop - 1, bw + 2, bh + 2);
+
+  // ── Uniform body ──
+  ctx.fillStyle = uniformColor;
+  ctx.fillRect(px - bw / 2, bodyTop, bw, bh);
+
+  // ── White crossbelt ──
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.fillRect(px - 1, bodyTop, 2, bh);
+  ctx.fillRect(px - bw / 2, bodyTop + bh * 0.4, bw, 1.5);
+
+  // ── Skin tone head ──
+  ctx.fillStyle = '#f2b97a';
+  ctx.beginPath();
+  ctx.arc(px, headCY, hr, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ── Face detail — eyes ──
+  ctx.fillStyle = '#333';
+  ctx.fillRect(px - 2, headCY - 1, 1.5, 1.5);
+  ctx.fillRect(px + 0.5, headCY - 1, 1.5, 1.5);
+
+  // ── Shako (tall military hat) ──
+  ctx.fillStyle = darkColor;
+  ctx.fillRect(px - hw, hatTop, hw * 2, hh);
+  // Hat brim
+  ctx.fillStyle = '#111';
+  ctx.fillRect(px - hw - 1, hatBot - 1.5, (hw + 1) * 2, 2);
+  // Hat badge (tiny white dot)
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(px, hatTop + 2, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// Darken a hex color for hats and shadow details
+function _darkenHex(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const dr = Math.max(0, Math.round(r * 0.45));
+  const dg = Math.max(0, Math.round(g * 0.45));
+  const db = Math.max(0, Math.round(b * 0.45));
+  return `rgb(${dr},${dg},${db})`;
 }
