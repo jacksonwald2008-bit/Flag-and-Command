@@ -206,49 +206,76 @@ export class Renderer {
   }
 
   _drawUnitClose(unit, selected) {
-    const ctx  = this.ctx;
-    const cam  = this.camera;
-    const sx   = cam.wx(unit.x);
-    const sy   = cam.wy(unit.y);
+    const ctx       = this.ctx;
+    const cam       = this.camera;
+    const sx        = cam.wx(unit.x);
+    const sy        = cam.wy(unit.y);
+    const teamColor = TEAM_COLORS[unit.team];
+    const darkColor = _darkenHex(teamColor);
+    const cosF      = Math.cos(unit.facing);
+    const sinF      = Math.sin(unit.facing);
+    const ranks     = unit.stats.ranks;
+    const alive     = unit.aliveCount;
+    const max       = unit.maxCount;
 
-    const ranks      = unit.stats.ranks;
-    const alive      = unit.aliveCount;
-    const max        = unit.maxCount;
-    const aliveRatio = max > 0 ? alive / max : 0;
-    const teamColor  = TEAM_COLORS[unit.team];
-    const darkColor  = _darkenHex(teamColor);
+    // Formation screen-space footprint (enforced minimums)
+    const fw = Math.max(52, cam.wLen(unit.frontWidth + 2));
+    const fh = Math.max(14 * ranks, cam.wLen(ranks * RANK_DEPTH + 2));
 
-    // Formation screen-space footprint
-    const fw = Math.max(56, cam.wLen(unit.frontWidth + 4));
-    const fh = Math.max(22 * ranks, cam.wLen(ranks * RANK_DEPTH + 4));
-
-    // ── Selection glow (drawn in world space, under soldiers) ──
-    if (selected) {
+    if (cam.scale < 1.0) {
+      // ── FAR VIEW: solid formation rectangle, like the reference screenshot ──
       ctx.save();
       ctx.translate(sx, sy);
       ctx.rotate(unit.facing);
-      ctx.strokeStyle = SELECTION_CLR;
-      ctx.shadowColor = SELECTION_CLR;
-      ctx.shadowBlur  = 10;
-      ctx.lineWidth   = 3;
-      ctx.strokeRect(-fw / 2 - 3, -fh / 2 - 3, fw + 6, fh + 6);
-      ctx.shadowBlur  = 0;
+
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      ctx.fillRect(-fw / 2 + 3, -fh / 2 + 3, fw, fh);
+
+      // Main body — team color, full opacity
+      ctx.fillStyle = teamColor;
+      ctx.fillRect(-fw / 2, -fh / 2, fw, fh);
+
+      // Casualties shown as a darker right-side strip
+      const deadW = fw * (1 - alive / max);
+      if (deadW > 0) {
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        ctx.fillRect(fw / 2 - deadW, -fh / 2, deadW, fh);
+      }
+
+      // Thin highlight line across top
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.fillRect(-fw / 2, -fh / 2, fw, 2);
+
+      // Border
+      ctx.strokeStyle = selected ? SELECTION_CLR : 'rgba(0,0,0,0.7)';
+      ctx.lineWidth   = selected ? 2.5 : 1.5;
+      ctx.strokeRect(-fw / 2, -fh / 2, fw, fh);
+
       ctx.restore();
+
+    } else {
+      // ── CLOSE VIEW: individual soldiers with NTW sprites ──
+      if (selected) {
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.rotate(unit.facing);
+        ctx.strokeStyle = SELECTION_CLR;
+        ctx.shadowColor = SELECTION_CLR;
+        ctx.shadowBlur  = 10;
+        ctx.lineWidth   = 3;
+        ctx.strokeRect(-fw / 2 - 3, -fh / 2 - 3, fw + 6, fh + 6);
+        ctx.shadowBlur  = 0;
+        ctx.restore();
+      }
+
+      for (const s of unit.soldiers) {
+        if (s.state === SS.DEAD) continue;
+        _drawSoldierLOD(ctx, cam.wx(s.x), cam.wy(s.y), unit.facing, teamColor, darkColor, cam.scale);
+      }
     }
 
-    // ── All alive soldiers, LOD by zoom so all stay visible but cost stays low ──
-    const cosF  = Math.cos(unit.facing);
-    const sinF  = Math.sin(unit.facing);
-    const scale = cam.scale;
-
-    for (const s of unit.soldiers) {
-      if (s.state === SS.DEAD) continue;
-      const px = cam.wx(s.x);
-      const py = cam.wy(s.y);
-      _drawSoldierLOD(ctx, px, py, unit.facing, teamColor, darkColor, scale);
-    }
-
-    // ── Regimental flag — large, NTW-style, at front-centre of formation ──
+    // Flag always drawn above formation front
     const flagX = sx + sinF * (fh / 2 + 4);
     const flagY = sy - cosF * (fh / 2 + 4);
     this._drawFlag(unit, flagX, flagY, unit.team);
