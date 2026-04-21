@@ -1,0 +1,335 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #111;
+  font-family: 'Georgia', serif;
+  color: #ddd;
+}
+
+#gameCanvas {
+  display: block;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  cursor: crosshair;
+}
+
+/* ============ ARMY BUILDER ============ */
+#army-builder {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(160deg, #0d1117 0%, #1a1f2e 60%, #0d1117 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 20px 20px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.ab-header { text-align: center; margin-bottom: 22px; }
+.ab-title  { font-size: 36px; letter-spacing: 6px; color: #ddaa00; font-family: 'Georgia', serif; text-shadow: 0 0 20px rgba(221,170,0,0.4); }
+.ab-sub    { color: #888; font-size: 14px; letter-spacing: 2px; margin-top: 4px; }
+
+.ab-body {
+  display: flex;
+  gap: 18px;
+  width: 100%;
+  max-width: 1100px;
+  flex: 1;
+}
+
+.ab-col   { display: flex; flex-direction: column; }
+.ab-left  { width: 240px; flex-shrink: 0; }
+.ab-center{ flex: 1; min-width: 0; }
+.ab-right { width: 260px; flex-shrink: 0; }
+
+.ab-section-title {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #888;
+  text-transform: uppercase;
+  border-bottom: 1px solid #333;
+  padding-bottom: 4px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#ab-soldier-count {
+  font-size: 13px;
+  color: #ddaa00;
+  letter-spacing: 0;
+}
+
+/* Faction buttons */
+.ab-factions      { display: flex; flex-wrap: wrap; gap: 6px; }
+.ab-faction-btn {
+  padding: 7px 14px;
+  background: #1e2330;
+  border: 1px solid #333;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: 'Georgia', serif;
+  transition: all 0.15s;
+}
+.ab-faction-btn:hover    { border-color: #666; color: #fff; }
+.ab-faction-btn.selected { background: #2a3520; border-color: #ddaa00; color: #ddaa00; }
+
+/* Roster */
+.ab-roster       { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; max-height: 380px; }
+.ab-roster-item {
+  display: flex;
+  align-items: center;
+  background: #1a1e2a;
+  border: 1px solid #2a2e3a;
+  padding: 6px 8px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.ab-roster-item:hover { background: #22283a; border-color: #444; }
+.ab-unit-name { flex: 1; font-size: 13px; }
+.ab-unit-info { font-size: 11px; color: #666; margin-right: 8px; }
+.ab-add-btn {
+  background: #2a4a2a;
+  border: 1px solid #3a6a3a;
+  color: #6abb6a;
+  width: 24px; height: 24px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+}
+.ab-add-btn:hover { background: #3a6a3a; }
+
+/* Army list */
+.ab-army-list { flex: 1; overflow-y: auto; background: #13171f; border: 1px solid #252a38; padding: 6px; }
+.ab-army-row  {
+  display: flex;
+  align-items: center;
+  padding: 5px 6px;
+  border-bottom: 1px solid #1e2230;
+  font-size: 13px;
+  gap: 8px;
+}
+.ab-army-row span:first-child { flex: 1; }
+.ab-remove-btn {
+  background: none;
+  border: none;
+  color: #664444;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 5px;
+}
+.ab-remove-btn:hover { color: #dd4444; }
+
+/* Action buttons */
+.ab-actions { display: flex; gap: 10px; margin-top: 12px; }
+.ab-btn     {
+  flex: 1;
+  padding: 10px;
+  font-size: 13px;
+  font-family: 'Georgia', serif;
+  cursor: pointer;
+  border: 1px solid;
+  letter-spacing: 1px;
+  transition: all 0.15s;
+}
+.ab-btn-danger  { background: #2a1a1a; border-color: #664444; color: #cc6666; }
+.ab-btn-danger:hover  { background: #3a2222; }
+.ab-btn-primary { background: #1a2a1a; border-color: #446644; color: #66cc66; }
+.ab-btn-primary:hover { background: #223322; border-color: #ddaa00; color: #ddaa00; }
+
+/* Map list */
+.ab-map-list  { display: flex; flex-direction: column; gap: 5px; }
+.ab-map-item  {
+  padding: 7px 10px;
+  background: #1a1e2a;
+  border: 1px solid #2a2e3a;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.12s;
+}
+.ab-map-item strong { display: block; color: #ccc; margin-bottom: 2px; }
+.ab-map-item span   { font-size: 11px; color: #666; }
+.ab-map-item:hover  { border-color: #555; }
+.ab-map-item.selected { border-color: #ddaa00; background: #1f2218; }
+
+/* Stats panel */
+.ab-stats-panel { background: #13171f; border: 1px solid #252a38; padding: 10px; font-size: 13px; }
+.ab-stat-name   { color: #ddaa00; font-size: 14px; margin-bottom: 8px; font-family: 'Georgia', serif; }
+.ab-stat-table  { width: 100%; border-collapse: collapse; }
+.ab-stat-table td { padding: 3px 5px; font-size: 12px; }
+.ab-stat-table td:first-child { color: #888; }
+.ab-stat-table td:last-child  { color: #ccc; text-align: right; }
+
+/* ============ BATTLE UI ============ */
+#battle-ui { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+
+/* Top bar */
+#battle-topbar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 46px;
+  background: rgba(10,12,20,0.85);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 20px;
+  pointer-events: auto;
+}
+
+.tb-morale { flex: 1; font-size: 13px; }
+.tb-timer  { font-family: monospace; font-size: 18px; color: #ccc; letter-spacing: 2px; }
+.tb-speeds { display: flex; gap: 5px; }
+
+.speed-btn {
+  padding: 4px 10px;
+  background: rgba(30,35,50,0.9);
+  border: 1px solid #333;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 12px;
+  pointer-events: auto;
+}
+.speed-btn:hover  { border-color: #666; color: #fff; }
+.speed-btn.active { background: rgba(40,60,30,0.9); border-color: #ddaa00; color: #ddaa00; }
+
+/* Left roster sidebar */
+#battle-roster {
+  position: absolute;
+  top: 46px;
+  left: 0;
+  width: 190px;
+  bottom: 0;
+  background: rgba(10,12,20,0.80);
+  border-right: 1px solid rgba(255,255,255,0.08);
+  overflow-y: auto;
+  padding: 6px 0;
+  pointer-events: auto;
+}
+
+.roster-unit {
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.roster-unit:hover    { background: rgba(255,255,255,0.05); }
+.roster-unit.selected { background: rgba(255,238,0,0.08); border-left: 2px solid #ffee00; }
+.roster-unit.shattered{ opacity: 0.4; }
+
+.ru-name  { font-size: 12px; color: #ccc; }
+.ru-count { font-size: 10px; color: #888; margin-bottom: 2px; }
+.ru-morale-bg { height: 3px; background: #1a1e2a; margin-bottom: 2px; }
+.ru-morale-fill { height: 100%; transition: width 0.3s; }
+.ru-state { font-size: 10px; }
+
+/* Right enemy panel */
+#enemy-panel {
+  position: absolute;
+  top: 46px;
+  right: 0;
+  width: 150px;
+  background: rgba(10,12,20,0.80);
+  border-left: 1px solid rgba(255,255,255,0.08);
+  padding: 10px;
+  pointer-events: none;
+}
+
+/* Selected unit detail */
+#unit-detail {
+  position: absolute;
+  bottom: 14px;
+  left: 200px;
+  width: 220px;
+  background: rgba(10,12,20,0.88);
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 10px 12px;
+  font-size: 12px;
+  display: none;
+  pointer-events: none;
+}
+.ud-title { font-size: 14px; color: #ddaa00; margin-bottom: 8px; font-family: 'Georgia', serif; }
+.ud-row   { display: flex; justify-content: space-between; margin-bottom: 3px; color: #aaa; }
+.ud-row span:last-child { color: #ddd; }
+.ud-morale-bar { height: 4px; background: #1a1e2a; margin: 6px 0; border-radius: 2px; overflow: hidden; }
+
+/* Deployment hint */
+#deploy-hint {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10,12,20,0.90);
+  border: 1px solid #ddaa00;
+  padding: 8px 20px;
+  font-size: 13px;
+  color: #ddaa00;
+  letter-spacing: 1px;
+  pointer-events: auto;
+  display: none;
+  z-index: 20;
+}
+#begin-battle-btn {
+  display: inline-block;
+  margin-left: 16px;
+  padding: 5px 16px;
+  background: #2a3520;
+  border: 1px solid #ddaa00;
+  color: #ddaa00;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: 'Georgia', serif;
+}
+#begin-battle-btn:hover { background: #3a4a30; }
+
+/* ============ END SCREEN ============ */
+#end-screen {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.72);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  pointer-events: auto;
+}
+
+.end-box {
+  background: #1a1a2a;
+  border: 2px solid #ddaa00;
+  padding: 40px 50px;
+  min-width: 380px;
+  text-align: center;
+}
+.end-box h2  { font-size: 32px; margin-bottom: 8px; font-family: 'Georgia', serif; }
+.end-type    { font-size: 18px; color: #aaa; margin-bottom: 20px; font-family: 'Georgia', serif; }
+.end-stats   { font-size: 14px; color: #888; line-height: 2; margin-bottom: 24px; }
+.end-stats strong { color: #ccc; }
+.end-btns    { display: flex; gap: 14px; justify-content: center; }
+.end-btn {
+  padding: 10px 24px;
+  background: #1a2a1a;
+  border: 1px solid #446644;
+  color: #66cc66;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'Georgia', serif;
+  transition: all 0.15s;
+}
+.end-btn:hover { background: #223322; border-color: #ddaa00; color: #ddaa00; }
+
+/* Scrollbars */
+::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar-track { background: #111; }
+::-webkit-scrollbar-thumb { background: #333; }

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flag and Command</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230d1117'/><rect x='14' y='4' width='2' height='24' fill='%235a3a10'/><rect x='16' y='4' width='10' height='7' fill='%23ddaa00'/></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Battle canvas — always present -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Army Builder Screen (HTML overlay) -->
+  <div id="army-builder" style="display:none"></div>
+
+  <!-- Battle UI overlay -->
+  <div id="battle-ui" style="display:none">
+    <div id="battle-topbar"></div>
+    <div id="battle-roster"></div>
+    <div id="enemy-panel"></div>
+    <div id="unit-detail"></div>
+    <div id="deploy-hint">
+      Position your troops, then begin.
+      <button id="begin-battle-btn">Begin Battle</button>
+    </div>
+  </div>
+
+  <!-- Battle End Screen -->
+  <div id="end-screen" style="display:none"></div>
+
+  <script type="module" src="src/game.js"></script>
+</body>
+</html>
