@@ -236,28 +236,19 @@ export class Renderer {
       ctx.restore();
     }
 
-    // ── NTW-style soldiers — distributed in screen space, oriented by facing ──
-    const visPerRank = Math.max(3, Math.min(16, Math.floor(fw / 10)));
-    const totalVis   = visPerRank * ranks;
-    const aliveVis   = Math.round(totalVis * aliveRatio);
+    // ── NTW-style soldiers — actual world positions, count scales with zoom ──
+    // maxVis grows with fw (which grows with cam.scale), so zooming in shows more soldiers
+    const maxVis       = Math.max(6, Math.floor(fw / 8) * ranks);
+    const aliveSoldiers = unit.soldiers.filter(s => s.state !== SS.DEAD);
+    const step          = Math.max(1, Math.floor(aliveSoldiers.length / maxVis));
+    const cosF          = Math.cos(unit.facing);
+    const sinF          = Math.sin(unit.facing);
 
-    // Rotation components for screen-space → world-facing transform
-    const cosF = Math.cos(unit.facing);
-    const sinF = Math.sin(unit.facing);
-
-    for (let i = 0; i < aliveVis; i++) {
-      const rank = Math.floor(i / visPerRank);
-      const file = i % visPerRank;
-
-      // Local formation coords (x = right, y = forward)
-      const lx = -fw / 2 + (file + 0.5) * (fw / visPerRank);
-      const ly = -fh / 2 + (rank + 0.5) * (fh / ranks);
-
-      // Rotate into screen space
-      const wx2 = sx + lx * cosF - ly * sinF;
-      const wy2 = sy + lx * sinF + ly * cosF;
-
-      _drawNTWSoldier(ctx, wx2, wy2, unit.facing, teamColor, darkColor);
+    for (let i = 0; i < aliveSoldiers.length; i += step) {
+      const s  = aliveSoldiers[i];
+      const px = cam.wx(s.x);
+      const py = cam.wy(s.y);
+      _drawNTWSoldier(ctx, px, py, unit.facing, teamColor, darkColor);
     }
 
     // ── Regimental flag — large, NTW-style, at front-centre of formation ──
