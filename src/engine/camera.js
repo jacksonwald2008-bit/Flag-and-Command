@@ -22,14 +22,15 @@ export class Camera {
   // World length → screen pixels
   wLen(meters) { return meters * this.scale; }
 
-  // Fit the full map into the screen, accounting for bottom UI bar
+  // Cover: scale so the map fills the screen edge-to-edge (like CSS cover)
   fitToScreen(bottomBarPx = 110) {
-    const availW = this.canvas.width  || window.innerWidth;
-    const availH = (this.canvas.height || window.innerHeight) - bottomBarPx;
-    this.scale = Math.min(availW * 0.96 / WORLD_W, availH * 0.96 / WORLD_H);
+    const W = this.canvas.width  || window.innerWidth;
+    const H = (this.canvas.height || window.innerHeight) - bottomBarPx;
+    // Use whichever axis needs MORE zoom to fill — guarantees no black edges
+    this.scale = Math.max(W / WORLD_W, H / WORLD_H);
     this.x = WORLD_W / 2;
-    // Shift world center slightly upward so map doesn't sit behind bottom bar
-    this.y = WORLD_H / 2 - (bottomBarPx / 2) / this.scale;
+    // Keep centre of visible area in the middle of the map
+    this.y = WORLD_H / 2;
   }
 
   zoom(factor, screenX, screenY) {

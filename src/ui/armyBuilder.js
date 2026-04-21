@@ -208,17 +208,17 @@ export class ArmyBuilderUI {
 }
 
 function _buildArmy(defs, team, zone) {
-  const units = [];
-  const n     = defs.length;
-  const cols  = Math.min(n, 6);
-  const rows  = Math.ceil(n / cols);
+  const units   = [];
+  const n       = defs.length;
+  const facing  = team === TEAM_PLAYER ? 0 : Math.PI; // north or south
 
-  const facing = team === TEAM_PLAYER ? 0 : Math.PI; // north or south
+  // Space units evenly, starting from left edge of deployment zone
+  const spacing = Math.min(zone.w / Math.max(n, 1), 120); // max 120m gap
+  const startX  = zone.x + spacing * 0.5;
+
   for (let i = 0; i < n; i++) {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    const x   = zone.x + (zone.w / (cols + 1)) * (col + 1);
-    const y   = zone.y + zone.h / 2 + (row - (rows - 1) / 2) * 80;
+    const x = startX + i * spacing;
+    const y = zone.y + zone.h / 2;
     units.push(new Unit(defs[i], team, x, y, facing));
   }
   return units;

@@ -23,20 +23,11 @@ export class Renderer {
     const ctx = this.ctx;
     const cam = this.camera;
 
-    // Fill entire canvas dark first (area outside the world map)
-    ctx.fillStyle = '#0e1018';
+    // Fill entire canvas with terrain colour — no black borders ever
+    ctx.fillStyle = map ? map.bgColor || TERRAIN_BG : TERRAIN_BG;
     ctx.fillRect(0, 0, cam.canvas.width, cam.canvas.height);
 
-    // Fill world rectangle with grass
-    ctx.fillStyle = map ? map.bgColor || TERRAIN_BG : TERRAIN_BG;
-    ctx.fillRect(cam.wx(0), cam.wy(0), cam.wLen(WORLD_W), cam.wLen(WORLD_H));
-
     if (!map) return;
-
-    // Draw world border
-    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-    ctx.lineWidth   = 2;
-    ctx.strokeRect(cam.wx(0), cam.wy(0), cam.wLen(WORLD_W), cam.wLen(WORLD_H));
 
     // Hills and flat terrain
     for (const t of (map.terrain || [])) {
