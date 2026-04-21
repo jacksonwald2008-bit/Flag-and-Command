@@ -29,7 +29,7 @@ export class ArmyBuilderUI {
           <div id="ab-roster" class="ab-roster"></div>
         </div>
         <div class="ab-col ab-center">
-          <div class="ab-section-title">YOUR ARMY <span id="ab-soldier-count">0 / 2000</span></div>
+          <div class="ab-section-title">YOUR ARMY <span id="ab-soldier-count">0 / 20</span></div>
           <div id="ab-army-list" class="ab-army-list"></div>
           <div class="ab-actions">
             <button id="ab-clear" class="ab-btn ab-btn-danger">Clear Army</button>
@@ -100,9 +100,8 @@ export class ArmyBuilderUI {
         <button class="ab-add-btn">+</button>
       `;
       div.querySelector('.ab-add-btn').addEventListener('click', () => {
-        const total = this._armySoldierCount();
-        if (total + stats.soldierCount > 2000) {
-          alert('Army is at capacity (2,000 soldiers).');
+        if (this.game.playerArmyDef.length >= 20) {
+          alert('Army is at capacity (20 units).');
           return;
         }
         this.game.playerArmyDef.push(type);
@@ -156,12 +155,7 @@ export class ArmyBuilderUI {
       });
       el.appendChild(row);
     }
-    const count = this._armySoldierCount();
-    document.getElementById('ab-soldier-count').textContent = `${count} / 2000`;
-  }
-
-  _armySoldierCount() {
-    return this.game.playerArmyDef.reduce((s, t) => s + UNIT_STATS[t].soldierCount, 0);
+    document.getElementById('ab-soldier-count').textContent = `${this.game.playerArmyDef.length} / 20`;
   }
 
   _showUnitStats(type) {
@@ -197,8 +191,8 @@ export class ArmyBuilderUI {
     // Build player army units
     g.playerArmy = _buildArmy(g.playerArmyDef, TEAM_PLAYER, DEPLOY_ZONE_PLAYER);
 
-    // Build AI army (mirror composition with faction variation)
-    const aiDef = _buildAIArmy(g.aiFaction, _armyStrength(g.playerArmyDef));
+    // Build AI army — match player unit count
+    const aiDef = _buildAIArmy(g.aiFaction, g.playerArmyDef.length);
     g.aiArmy = _buildArmy(aiDef, TEAM_AI, DEPLOY_ZONE_AI);
 
     g.map = MAPS[g.selectedMap];
@@ -224,27 +218,18 @@ function _buildArmy(defs, team, zone) {
   return units;
 }
 
-function _buildAIArmy(faction, targetStrength) {
-  const available = FACTION_UNITS[faction];
+function _buildAIArmy(faction, playerUnitCount) {
+  const available  = FACTION_UNITS[faction];
   const uniqueUnit = available[available.length - 1];
-  // Priority order: bulk infantry, some cavalry, one artillery, elite
   const priorities = ['line_infantry', 'line_infantry', 'sabre_cavalry', uniqueUnit, 'artillery', 'militia'];
-  const def = [];
-  let strength = 0;
-  const cap = Math.min(targetStrength * 0.9, 2000);
+  const target     = Math.min(playerUnitCount, 20);
+  const def        = [];
 
-  for (let attempt = 0; strength < cap && attempt < 40; attempt++) {
+  for (let attempt = 0; def.length < target && attempt < 80; attempt++) {
     const type = priorities[attempt % priorities.length];
     if (!available.includes(type)) continue;
-    const soldiers = UNIT_STATS[type].soldierCount;
-    if (strength + soldiers > 2000) continue;
     def.push(type);
-    strength += soldiers;
   }
   if (!def.length) def.push('line_infantry');
   return def;
-}
-
-function _armyStrength(defs) {
-  return defs.reduce((s, t) => s + UNIT_STATS[t].soldierCount, 0);
 }
