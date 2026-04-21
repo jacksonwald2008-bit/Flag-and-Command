@@ -142,13 +142,7 @@ export class Renderer {
       this.ctx.globalAlpha = 0.3;
     }
 
-    if (cam.scale < LOD_FAR_MAX) {
-      this._drawUnitFar(unit, selected);
-    } else if (cam.scale < LOD_MID_MAX) {
-      this._drawUnitMid(unit, selected);
-    } else {
-      this._drawUnitClose(unit, selected);
-    }
+    this._drawUnitClose(unit, selected);
 
     this.ctx.globalAlpha = 1.0;
 
