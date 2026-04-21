@@ -23,7 +23,7 @@ export class Camera {
   wLen(meters) { return meters * this.scale; }
 
   // Fit: scale so the entire map is visible, canvas background fills the rest
-  fitToScreen(bottomBarPx = 110) {
+  fitToScreen(bottomBarPx = 0) {
     const W = this.canvas.width  || window.innerWidth;
     const H = (this.canvas.height || window.innerHeight) - bottomBarPx;
     // Use whichever axis needs LESS zoom — whole map visible, grass fills remainder

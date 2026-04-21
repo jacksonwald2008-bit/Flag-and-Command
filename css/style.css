@@ -206,86 +206,96 @@ html, body {
 .ep-units    { font-size: 11px; color: #666; }
 
 /* ═══════════════════════════════════════════
-   UNIT CARD BAR — bottom, Total War style
+   UNIT CARD BAR — Shogun 2 style, floating
 ═══════════════════════════════════════════ */
 #unit-card-bar {
   position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 110px;
-  background: linear-gradient(to top, rgba(4,5,10,0.97) 70%, rgba(4,5,10,0.75) 100%);
-  border-top: 1px solid rgba(255,255,255,0.08);
+  bottom: 8px; left: 8px; right: 8px;
+  height: auto;
+  background: none;
+  border: none;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 6px 10px;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 3px;
+  padding: 0;
   overflow-x: auto;
   overflow-y: hidden;
-  pointer-events: auto;
+  pointer-events: none; /* cards themselves have pointer-events: auto */
 }
 
-/* Hide scrollbar but still scrollable */
-#unit-card-bar::-webkit-scrollbar { height: 3px; }
-#unit-card-bar::-webkit-scrollbar-track { background: transparent; }
-#unit-card-bar::-webkit-scrollbar-thumb { background: #333; }
+/* Invisible scrollbar */
+#unit-card-bar::-webkit-scrollbar { height: 0; }
 
 .unit-card {
   flex-shrink: 0;
-  width: 78px; height: 96px;
-  background: rgba(14,17,26,0.95);
-  border: 1px solid #2a2e3a;
+  width: 74px; height: 90px;
+  background: rgba(8,10,16,0.82);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-bottom: 2px solid rgba(255,255,255,0.06);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 5px 4px 4px;
+  padding: 4px 3px 4px;
   gap: 2px;
-  transition: border-color 0.1s;
+  transition: border-color 0.12s, background 0.12s;
   position: relative;
   user-select: none;
+  pointer-events: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
-.unit-card:hover { border-color: #555; }
+.unit-card:hover {
+  border-color: rgba(255,255,255,0.3);
+  background: rgba(18,20,30,0.9);
+}
 
 .unit-card.selected {
   border-color: #ddaa00;
-  background: rgba(30,28,10,0.95);
-  box-shadow: 0 0 8px rgba(221,170,0,0.25);
+  border-bottom-color: #aa7700;
+  background: rgba(28,24,6,0.92);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.6), 0 0 10px rgba(221,170,0,0.2);
 }
 
 .unit-card.routing {
   border-color: #882222;
-  background: rgba(20,8,8,0.95);
+  border-bottom-color: #551111;
+  background: rgba(20,6,6,0.88);
 }
 
 .unit-card.shattered {
-  opacity: 0.35;
+  opacity: 0.3;
   pointer-events: none;
 }
 
-/* Unit type badge at top of card */
+/* Strength bar — full-width stripe at the very top of the card */
+.uc-strength-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: #22bb44;
+  transition: width 0.5s, background 0.5s;
+  border-radius: 0;
+}
+
+/* Unit type badge */
 .uc-type {
   width: 100%;
   text-align: center;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: bold;
   letter-spacing: 1px;
-  color: #fff;
-  background: rgba(255,255,255,0.08);
-  padding: 2px 0;
+  padding: 3px 0 2px;
   border-radius: 1px;
   font-family: 'Georgia', serif;
-}
-
-.unit-card.selected .uc-type {
-  background: rgba(221,170,0,0.18);
-  color: #ffdd77;
+  margin-top: 3px;
 }
 
 /* Unit name */
 .uc-name {
-  font-size: 10px;
-  color: #ccc;
+  font-size: 9px;
+  color: #bbb;
   text-align: center;
   line-height: 1.2;
   width: 100%;
@@ -298,15 +308,16 @@ html, body {
 /* Soldier count */
 .uc-count {
   font-size: 10px;
-  color: #888;
+  color: #aaa;
   font-family: monospace;
+  letter-spacing: 0;
 }
 
 /* Morale bar */
 .uc-morale-bg {
-  width: 100%; height: 4px;
-  background: #1a1e2a;
-  margin-top: 1px;
+  width: 100%; height: 3px;
+  background: rgba(255,255,255,0.08);
+  margin-top: 2px;
 }
 .uc-morale-fill {
   height: 100%;
@@ -315,7 +326,7 @@ html, body {
 
 /* Status text */
 .uc-state {
-  font-size: 9px;
+  font-size: 8px;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-top: 1px;

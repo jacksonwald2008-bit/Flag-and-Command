@@ -419,10 +419,10 @@ export class Renderer {
   drawMinimap(playerArmy, aiArmy, map) {
     const ctx    = this.ctx;
     const cam    = this.camera;
-    const mSize  = 140;
+    const mSize  = 130;
     const margin = 12;
     const mx     = cam.canvas.width - mSize - margin;
-    const my     = cam.canvas.height - mSize - margin - 116; // above 110px card bar
+    const my     = cam.canvas.height - mSize - margin - 108; // above floating card row
 
     // Background
     ctx.fillStyle   = map ? map.bgColor || '#a8d66e' : '#a8d66e';

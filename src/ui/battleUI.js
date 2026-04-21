@@ -125,6 +125,7 @@ export class BattleUISystem {
     const div = document.createElement('div');
     div.className = 'unit-card';
     div.innerHTML = `
+      <div class="uc-strength-bar"></div>
       <div class="uc-type" style="background:${PLAYER_BADGE_BG};color:${PLAYER_BADGE_CLR}">${TYPE_LABEL[unit.type] || 'INF'}</div>
       <div class="uc-name">${unit.stats.name}</div>
       <div class="uc-count">${unit.maxCount}/${unit.maxCount}</div>
@@ -141,15 +142,22 @@ export class BattleUISystem {
   _updateCard(el, unit, isSelected) {
     if (!el) return;
 
-    const moraleW  = Math.round(unit.morale / unit.maxMorale * 100);
-    const state    = unit.moraleState;
-    const color    = _moraleBarColor(state);
-    const stateStr = state.charAt(0).toUpperCase() + state.slice(1);
+    const moraleW   = Math.round(unit.morale / unit.maxMorale * 100);
+    const strengthW = Math.round(unit.aliveCount / unit.maxCount * 100);
+    const state     = unit.moraleState;
+    const color     = _moraleBarColor(state);
+    const stateStr  = state.charAt(0).toUpperCase() + state.slice(1);
 
     el.className = 'unit-card' +
       (isSelected       ? ' selected'  : '') +
       (unit.isShattered ? ' shattered' : '') +
       (state === MORALE_STATE.ROUTING || state === MORALE_STATE.BROKEN ? ' routing' : '');
+
+    const strEl = el.querySelector('.uc-strength-bar');
+    if (strEl) {
+      strEl.style.width      = strengthW + '%';
+      strEl.style.background = strengthW > 60 ? '#22bb44' : strengthW > 30 ? '#ddaa00' : '#dd4422';
+    }
 
     const countEl = el.querySelector('.uc-count');
     if (countEl) countEl.textContent = `${unit.aliveCount}/${unit.maxCount}`;
