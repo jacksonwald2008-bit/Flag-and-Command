@@ -29,14 +29,14 @@ export class Renderer {
 
     if (!map) return;
 
-    // Hills and flat terrain
+    // Hills and flat terrain — NTW style with visible dark outlines
     for (const t of (map.terrain || [])) {
-      this._drawPolygon(t.polygon, t.color, 'rgba(0,0,0,0.15)', 1);
+      this._drawPolygon(t.polygon, t.color, 'rgba(0,0,0,0.35)', 1.5);
     }
 
     // Forests
     for (const f of (map.forests || [])) {
-      this._drawPolygon(f.polygon, f.color, 'rgba(0,0,0,0.2)', 1.5);
+      this._drawPolygon(f.polygon, f.color, 'rgba(0,0,0,0.4)', 2);
       // Add a few tree texture dots
       this._drawForestTexture(f.polygon, f.accent);
     }
@@ -218,97 +218,124 @@ export class Renderer {
     const teamColor  = TEAM_COLORS[unit.team];
     const darkColor  = _darkenHex(teamColor);
 
-    // Formation size in screen pixels
-    const perRank  = Math.max(4, Math.min(14, Math.round(alive / ranks / (max / ranks / 8))));
-    const fw       = Math.max(52, cam.wLen(unit.frontWidth + 4));
-    const fh       = Math.max(20 * ranks, cam.wLen(ranks * RANK_DEPTH + 2));
+    // Formation screen-space footprint
+    const fw = Math.max(56, cam.wLen(unit.frontWidth + 4));
+    const fh = Math.max(22 * ranks, cam.wLen(ranks * RANK_DEPTH + 4));
 
-    ctx.save();
-    ctx.translate(sx, sy);
-    ctx.rotate(unit.facing);
-
-    // ── Ground shadow beneath formation ──
-    ctx.fillStyle = 'rgba(0,0,0,0.18)';
-    ctx.fillRect(-fw / 2 + 2, -fh / 2 + 2, fw, fh);
-
-    // ── Formation ground plate ──
-    ctx.fillStyle = 'rgba(180,140,80,0.28)';
-    ctx.fillRect(-fw / 2, -fh / 2, fw, fh);
-
-    // ── Formation border ──
-    ctx.strokeStyle = selected ? SELECTION_CLR : 'rgba(0,0,0,0.5)';
-    ctx.lineWidth   = selected ? 2.5 : 1;
-    ctx.strokeRect(-fw / 2, -fh / 2, fw, fh);
+    // ── Selection glow (drawn in world space, under soldiers) ──
     if (selected) {
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.rotate(unit.facing);
       ctx.strokeStyle = SELECTION_CLR;
-      ctx.globalAlpha = 0.3;
-      ctx.lineWidth   = 6;
-      ctx.strokeRect(-fw / 2, -fh / 2, fw, fh);
-      ctx.globalAlpha = 1;
-      ctx.lineWidth   = 2;
-      ctx.strokeRect(-fw / 2, -fh / 2, fw, fh);
+      ctx.shadowColor = SELECTION_CLR;
+      ctx.shadowBlur  = 10;
+      ctx.lineWidth   = 3;
+      ctx.strokeRect(-fw / 2 - 3, -fh / 2 - 3, fw + 6, fh + 6);
+      ctx.shadowBlur  = 0;
+      ctx.restore();
     }
 
-    // ── Cartoon soldiers ──
-    const visPerRank = Math.max(3, Math.min(14, Math.floor(fw / 11)));
+    // ── NTW-style soldiers — distributed in screen space, oriented by facing ──
+    const visPerRank = Math.max(3, Math.min(16, Math.floor(fw / 10)));
     const totalVis   = visPerRank * ranks;
     const aliveVis   = Math.round(totalVis * aliveRatio);
+
+    // Rotation components for screen-space → world-facing transform
+    const cosF = Math.cos(unit.facing);
+    const sinF = Math.sin(unit.facing);
 
     for (let i = 0; i < aliveVis; i++) {
       const rank = Math.floor(i / visPerRank);
       const file = i % visPerRank;
-      const px   = -fw / 2 + (file + 0.5) * (fw / visPerRank);
-      const py   = -fh / 2 + (rank + 0.5) * (fh / ranks);
-      _drawCartoonSoldier(ctx, px, py, teamColor, darkColor);
+
+      // Local formation coords (x = right, y = forward)
+      const lx = -fw / 2 + (file + 0.5) * (fw / visPerRank);
+      const ly = -fh / 2 + (rank + 0.5) * (fh / ranks);
+
+      // Rotate into screen space
+      const wx2 = sx + lx * cosF - ly * sinF;
+      const wy2 = sy + lx * sinF + ly * cosF;
+
+      _drawNTWSoldier(ctx, wx2, wy2, unit.facing, teamColor, darkColor);
     }
 
-    ctx.restore();
-
-    // ── Flag at formation front ──
-    const cos   = Math.cos(unit.facing);
-    const sin   = Math.sin(unit.facing);
-    const flagX = sx + sin * (fh / 2 + 6);
-    const flagY = sy - cos * (fh / 2 + 6);
-    this._drawFlag(unit, flagX, flagY);
+    // ── Regimental flag — large, NTW-style, at front-centre of formation ──
+    const flagX = sx + sinF * (fh / 2 + 4);
+    const flagY = sy - cosF * (fh / 2 + 4);
+    this._drawFlag(unit, flagX, flagY, unit.team);
   }
 
-  _drawFlag(unit, sx, sy) {
-    const ctx = this.ctx;
-    const h   = 16;   // fixed pixel height — always visible
-    const w   = 11;
-    const pct = unit.aliveCount / unit.maxCount;
-    const col = _moraleColor(unit.moraleState);
+  _drawFlag(unit, sx, sy, team) {
+    const ctx  = this.ctx;
+    const pct  = unit.aliveCount / unit.maxCount;
+    const moraleCol = _moraleColor(unit.moraleState);
 
-    // Pole — black outline then brown
-    ctx.lineWidth   = 3.5;
+    // Pole
+    const poleH = 28;
+    ctx.lineWidth   = 3;
     ctx.strokeStyle = '#111';
-    ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.lineTo(sx, sy - h);
-    ctx.stroke();
-    ctx.lineWidth   = 2;
-    ctx.strokeStyle = '#7a4e18';
-    ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.lineTo(sx, sy - h);
-    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy - poleH); ctx.stroke();
+    ctx.lineWidth   = 1.8;
+    ctx.strokeStyle = '#9a6820';
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy - poleH); ctx.stroke();
+    // Pole finial (gold ball)
+    ctx.fillStyle = '#ddaa00';
+    ctx.beginPath(); ctx.arc(sx, sy - poleH, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(sx, sy - poleH, 2.5, 0, Math.PI * 2); ctx.stroke();
 
-    // Flag cloth — black outline then fill
-    ctx.fillStyle = '#111';
-    ctx.fillRect(sx + 1, sy - h - 1, w + 2, Math.round(h * 0.6) + 2);
-    ctx.fillStyle = col;
+    // Flag cloth
+    const fw = 18;
+    const fh = 14;
+    const fx = sx + 2;
+    const fy = sy - poleH + 2;
+
     if (pct < 0.45) {
-      // Tattered
+      // Tattered flag
+      ctx.fillStyle = '#111';
       ctx.beginPath();
-      ctx.moveTo(sx + 2, sy - h);
-      ctx.lineTo(sx + 2 + w, sy - h + h * 0.15);
-      ctx.lineTo(sx + 2 + w * 0.55, sy - h + h * 0.38);
-      ctx.lineTo(sx + 2 + w, sy - h + h * 0.55);
-      ctx.lineTo(sx + 2, sy - h + h * 0.4);
-      ctx.closePath();
-      ctx.fill();
+      ctx.moveTo(fx - 1, fy - 1);
+      ctx.lineTo(fx + fw + 2, fy + fh * 0.2);
+      ctx.lineTo(fx + fw * 0.6, fy + fh * 0.5);
+      ctx.lineTo(fx + fw + 1, fy + fh * 0.85);
+      ctx.lineTo(fx - 1, fy + fh + 1);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = moraleCol;
+      ctx.beginPath();
+      ctx.moveTo(fx, fy);
+      ctx.lineTo(fx + fw, fy + fh * 0.2);
+      ctx.lineTo(fx + fw * 0.6, fy + fh * 0.5);
+      ctx.lineTo(fx + fw, fy + fh * 0.85);
+      ctx.lineTo(fx, fy + fh);
+      ctx.closePath(); ctx.fill();
     } else {
-      ctx.fillRect(sx + 2, sy - h, w, Math.round(h * 0.58));
+      // Full tricolor-style flag
+      const teamColors = team === 0
+        ? ['#ffffff', '#cc2211', '#1133aa'] // player: white/red/blue (British RWB)
+        : ['#1133aa', '#ffffff', '#cc2211']; // AI: blue/white/red (French tricolor)
+      const sw = fw / 3;
+      // Outline
+      ctx.fillStyle = '#111';
+      ctx.fillRect(fx - 1, fy - 1, fw + 2, fh + 2);
+      // Three vertical stripes
+      for (let s = 0; s < 3; s++) {
+        ctx.fillStyle = teamColors[s];
+        ctx.fillRect(fx + s * sw, fy, sw, fh);
+      }
+      // Thin black border lines between stripes
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+      ctx.lineWidth = 0.8;
+      ctx.strokeRect(fx, fy, fw, fh);
+      ctx.beginPath();
+      ctx.moveTo(fx + sw, fy); ctx.lineTo(fx + sw, fy + fh);
+      ctx.moveTo(fx + sw * 2, fy); ctx.lineTo(fx + sw * 2, fy + fh);
+      ctx.stroke();
+      // Morale dot in center of flag
+      ctx.fillStyle = moraleCol;
+      ctx.beginPath();
+      ctx.arc(fx + fw / 2, fy + fh / 2, 2.5, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
@@ -581,61 +608,80 @@ function _drawButton(ctx, x, y, w, h, label, bg) {
   ctx.fillText(label, x + w / 2, y + h / 2 + 5);
 }
 
-// ── Cartoon soldier sprite (Fire & Maneuver style) ──────────────────
-// Drawn in formation-local screen coords (px, py = centre of soldier slot)
-function _drawCartoonSoldier(ctx, px, py, uniformColor, darkColor) {
-  const bw = 6;    // body width
-  const bh = 10;   // body height
-  const hr = 4.5;  // head radius
-  const hh = 5;    // shako (hat) height
-  const hw = 5;    // shako half-width
+// ── NTW-style top-down soldier sprite ───────────────────────────────
+// sx, sy = screen position; facing = unit facing in radians
+function _drawNTWSoldier(ctx, sx, sy, facing, uniformColor, darkColor) {
+  const fwX = Math.sin(facing);   // forward screen vector
+  const fwY = -Math.cos(facing);
+  const rtX = Math.cos(facing);   // right screen vector
+  const rtY = Math.sin(facing);
 
-  const bodyTop = py - bh * 0.5;
-  const headCY  = bodyTop - hr + 1;
-  const hatBot  = headCY - hr + 1;
-  const hatTop  = hatBot - hh;
-
-  // ── Black outlines (drawn 1-1.5px larger) ──
-  ctx.fillStyle = '#111';
-  // Hat outline
-  ctx.fillRect(px - hw - 1, hatTop - 1, (hw + 1) * 2, hh + 1.5);
-  // Head outline
+  // ── Drop shadow ──
+  ctx.fillStyle = 'rgba(0,0,0,0.22)';
   ctx.beginPath();
-  ctx.arc(px, headCY, hr + 1.2, 0, Math.PI * 2);
+  ctx.ellipse(sx + 1.2, sy + 1.2, 5.5, 3.5, facing, 0, Math.PI * 2);
   ctx.fill();
-  // Body outline
-  ctx.fillRect(px - bw / 2 - 1, bodyTop - 1, bw + 2, bh + 2);
 
-  // ── Uniform body ──
+  // ── Musket — extends forward from right shoulder ──
+  const msx = sx + rtX * 2.2 + fwX * 1;
+  const msy = sy + rtY * 2.2 + fwY * 1;
+  ctx.strokeStyle = '#1a0e00';
+  ctx.lineWidth   = 1.8;
+  ctx.lineCap     = 'round';
+  ctx.beginPath();
+  ctx.moveTo(msx, msy);
+  ctx.lineTo(msx + fwX * 10, msy + fwY * 10);
+  ctx.stroke();
+  // Bayonet glint
+  ctx.strokeStyle = 'rgba(220,220,255,0.7)';
+  ctx.lineWidth   = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(msx + fwX * 9, msy + fwY * 9);
+  ctx.lineTo(msx + fwX * 12, msy + fwY * 12);
+  ctx.stroke();
+
+  // ── Body — elongated ellipse oriented along facing ──
+  ctx.fillStyle = '#111';
+  ctx.beginPath();
+  ctx.ellipse(sx, sy, 5, 3.2, facing, 0, Math.PI * 2);
+  ctx.fill();
+
   ctx.fillStyle = uniformColor;
-  ctx.fillRect(px - bw / 2, bodyTop, bw, bh);
-
-  // ── White crossbelt ──
-  ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.fillRect(px - 1, bodyTop, 2, bh);
-  ctx.fillRect(px - bw / 2, bodyTop + bh * 0.4, bw, 1.5);
-
-  // ── Skin tone head ──
-  ctx.fillStyle = '#f2b97a';
   ctx.beginPath();
-  ctx.arc(px, headCY, hr, 0, Math.PI * 2);
+  ctx.ellipse(sx, sy, 4, 2.5, facing, 0, Math.PI * 2);
   ctx.fill();
 
-  // ── Face detail — eyes ──
-  ctx.fillStyle = '#333';
-  ctx.fillRect(px - 2, headCY - 1, 1.5, 1.5);
-  ctx.fillRect(px + 0.5, headCY - 1, 1.5, 1.5);
-
-  // ── Shako (tall military hat) ──
-  ctx.fillStyle = darkColor;
-  ctx.fillRect(px - hw, hatTop, hw * 2, hh);
-  // Hat brim
-  ctx.fillStyle = '#111';
-  ctx.fillRect(px - hw - 1, hatBot - 1.5, (hw + 1) * 2, 2);
-  // Hat badge (tiny white dot)
-  ctx.fillStyle = '#fff';
+  // White crossbelt (thin diagonal lines on body)
+  ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+  ctx.lineWidth   = 1;
   ctx.beginPath();
-  ctx.arc(px, hatTop + 2, 1.2, 0, Math.PI * 2);
+  ctx.moveTo(sx - rtX * 2 - fwX * 1.5, sy - rtY * 2 - fwY * 1.5);
+  ctx.lineTo(sx + rtX * 1 + fwX * 1.5, sy + rtY * 1 + fwY * 1.5);
+  ctx.stroke();
+
+  // ── Head — circle just forward of body centre ──
+  const hx = sx + fwX * 3.2;
+  const hy = sy + fwY * 3.2;
+  ctx.fillStyle = '#111';
+  ctx.beginPath(); ctx.arc(hx, hy, 3.8, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#e8a868';   // skin
+  ctx.beginPath(); ctx.arc(hx, hy, 3, 0, Math.PI * 2); ctx.fill();
+
+  // ── Shako hat — small ellipse on top of head, darker ──
+  const hatX = hx + fwX * 0.5;
+  const hatY = hy + fwY * 0.5;
+  ctx.fillStyle = '#111';
+  ctx.beginPath();
+  ctx.ellipse(hatX, hatY, 3.5, 2.2, facing, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = darkColor;
+  ctx.beginPath();
+  ctx.ellipse(hatX, hatY, 2.8, 1.7, facing, 0, Math.PI * 2);
+  ctx.fill();
+  // Hat badge glint
+  ctx.fillStyle = 'rgba(255,220,80,0.9)';
+  ctx.beginPath();
+  ctx.arc(hatX + fwX * 0.4, hatY + fwY * 0.4, 0.9, 0, Math.PI * 2);
   ctx.fill();
 }
 
