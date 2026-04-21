@@ -623,49 +623,12 @@ function _drawButton(ctx, x, y, w, h, label, bg) {
   ctx.fillText(label, x + w / 2, y + h / 2 + 5);
 }
 
-// ── Close-zoom soldier: circle body + shako hat + musket ────────────
+// ── Close-zoom soldier: simple circle ───────────────────────────────
 function _drawSoldierLOD(ctx, sx, sy, facing, uniformColor, darkColor, scale) {
-  const fwX = Math.sin(facing);
-  const fwY = -Math.cos(facing);
-
-  // Drop shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.18)';
-  ctx.beginPath();
-  ctx.arc(sx + 1, sy + 1, 5, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Body circle
   ctx.fillStyle = '#111';
-  ctx.beginPath(); ctx.arc(sx, sy, 5.5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(sx, sy, 5, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = uniformColor;
-  ctx.beginPath(); ctx.arc(sx, sy, 4.5, 0, Math.PI * 2); ctx.fill();
-
-  // Shako hat — small dark ellipse at the forward edge
-  const hatX = sx + fwX * 4;
-  const hatY = sy + fwY * 4;
-  ctx.fillStyle = '#111';
-  ctx.beginPath(); ctx.ellipse(hatX, hatY, 3.2, 2, facing, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = darkColor;
-  ctx.beginPath(); ctx.ellipse(hatX, hatY, 2.5, 1.5, facing, 0, Math.PI * 2); ctx.fill();
-  // Gold badge
-  ctx.fillStyle = 'rgba(255,215,60,0.9)';
-  ctx.beginPath(); ctx.arc(hatX + fwX * 0.5, hatY + fwY * 0.5, 0.9, 0, Math.PI * 2); ctx.fill();
-
-  // Musket — line extending forward from the right side
-  ctx.strokeStyle = '#1a0e00';
-  ctx.lineWidth   = 1.5;
-  ctx.lineCap     = 'round';
-  ctx.beginPath();
-  ctx.moveTo(sx + fwX * 5,  sy + fwY * 5);
-  ctx.lineTo(sx + fwX * 14, sy + fwY * 14);
-  ctx.stroke();
-  // Bayonet glint
-  ctx.strokeStyle = 'rgba(200,220,255,0.7)';
-  ctx.lineWidth   = 0.8;
-  ctx.beginPath();
-  ctx.moveTo(sx + fwX * 13, sy + fwY * 13);
-  ctx.lineTo(sx + fwX * 16, sy + fwY * 16);
-  ctx.stroke();
+  ctx.beginPath(); ctx.arc(sx, sy, 4, 0, Math.PI * 2); ctx.fill();
 }
 
 // Darken a hex color for hats and shadow details
