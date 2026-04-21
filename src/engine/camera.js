@@ -22,14 +22,13 @@ export class Camera {
   // World length → screen pixels
   wLen(meters) { return meters * this.scale; }
 
-  // Cover: scale so the map fills the screen edge-to-edge (like CSS cover)
+  // Fit: scale so the entire map is visible, canvas background fills the rest
   fitToScreen(bottomBarPx = 110) {
     const W = this.canvas.width  || window.innerWidth;
     const H = (this.canvas.height || window.innerHeight) - bottomBarPx;
-    // Use whichever axis needs MORE zoom to fill — guarantees no black edges
-    this.scale = Math.max(W / WORLD_W, H / WORLD_H);
+    // Use whichever axis needs LESS zoom — whole map visible, grass fills remainder
+    this.scale = Math.min(W / WORLD_W, H / WORLD_H) * 0.95;
     this.x = WORLD_W / 2;
-    // Keep centre of visible area in the middle of the map
     this.y = WORLD_H / 2;
   }
 
