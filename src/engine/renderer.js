@@ -237,6 +237,9 @@ export class Renderer {
     }
 
     // ── NTW-style soldiers — all alive soldiers, always ──
+    const cosF = Math.cos(unit.facing);
+    const sinF = Math.sin(unit.facing);
+
     for (const s of unit.soldiers) {
       if (s.state === SS.DEAD) continue;
       _drawNTWSoldier(ctx, cam.wx(s.x), cam.wy(s.y), unit.facing, teamColor, darkColor);
