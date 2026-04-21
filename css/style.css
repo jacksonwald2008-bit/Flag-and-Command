@@ -145,6 +145,13 @@ html, body {
   pointer-events: auto;
 }
 
+.tb-phase {
+  font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+  color: #ddaa00;
+  background: rgba(0,0,0,0.55);
+  padding: 4px 10px; border: 1px solid rgba(255,255,255,0.1);
+}
+
 .tb-timer {
   font-family: monospace; font-size: 20px;
   color: #ddd; letter-spacing: 3px;

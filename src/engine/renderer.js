@@ -422,7 +422,7 @@ export class Renderer {
     const mSize  = 140;
     const margin = 12;
     const mx     = cam.canvas.width - mSize - margin;
-    const my     = cam.canvas.height - mSize - margin - 60; // above battle UI space
+    const my     = cam.canvas.height - mSize - margin - 116; // above 110px card bar
 
     // Background
     ctx.fillStyle   = map ? map.bgColor || '#a8d66e' : '#a8d66e';

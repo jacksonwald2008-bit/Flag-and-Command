@@ -81,9 +81,14 @@ class Game {
       document.getElementById('battle-ui').style.display   = 'block';
       document.getElementById('deploy-hint').style.display = 'block';
       this.camera.fitToScreen();
+      this.battleUISystem.reset();
     } else if (newState === GAME_STATE.BATTLE) {
       document.getElementById('battle-ui').style.display = 'block';
       this.battleTimer = 0;
+      this.paused      = false;
+      this.gameSpeed   = 1;
+      this.selectedUnits = [];
+      this.battleUISystem.reset();
       this.ai.reset();
     } else if (newState === GAME_STATE.BATTLE_END) {
       document.getElementById('battle-ui').style.display  = 'block';
