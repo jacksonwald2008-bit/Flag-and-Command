@@ -236,13 +236,16 @@ export class Renderer {
       ctx.restore();
     }
 
-    // ── NTW-style soldiers — all alive soldiers, always ──
-    const cosF = Math.cos(unit.facing);
-    const sinF = Math.sin(unit.facing);
+    // ── All alive soldiers, LOD by zoom so all stay visible but cost stays low ──
+    const cosF  = Math.cos(unit.facing);
+    const sinF  = Math.sin(unit.facing);
+    const scale = cam.scale;
 
     for (const s of unit.soldiers) {
       if (s.state === SS.DEAD) continue;
-      _drawNTWSoldier(ctx, cam.wx(s.x), cam.wy(s.y), unit.facing, teamColor, darkColor);
+      const px = cam.wx(s.x);
+      const py = cam.wy(s.y);
+      _drawSoldierLOD(ctx, px, py, unit.facing, teamColor, darkColor, scale);
     }
 
     // ── Regimental flag — large, NTW-style, at front-centre of formation ──
@@ -593,23 +596,47 @@ function _drawButton(ctx, x, y, w, h, label, bg) {
   ctx.fillText(label, x + w / 2, y + h / 2 + 5);
 }
 
-// ── NTW-style top-down soldier sprite ───────────────────────────────
-// sx, sy = screen position; facing = unit facing in radians
+// ── Soldier LOD dispatcher ───────────────────────────────────────────
+function _drawSoldierLOD(ctx, sx, sy, facing, uniformColor, darkColor, scale) {
+  if (scale < 0.55) {
+    // Micro — 2 fillRects per soldier, essentially free
+    ctx.fillStyle = '#111';
+    ctx.fillRect(sx - 2, sy - 2, 4, 4);
+    ctx.fillStyle = uniformColor;
+    ctx.fillRect(sx - 1.5, sy - 1.5, 3, 3);
+  } else if (scale < 1.4) {
+    // Simple dot — outline + team color circle, no arcs on body
+    const fwX = Math.sin(facing);
+    const fwY = -Math.cos(facing);
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(sx, sy, 4.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = uniformColor;
+    ctx.beginPath(); ctx.arc(sx, sy, 3.5, 0, Math.PI * 2); ctx.fill();
+    // head nub
+    ctx.fillStyle = '#e8a868';
+    ctx.beginPath(); ctx.arc(sx + fwX * 3.5, sy + fwY * 3.5, 2, 0, Math.PI * 2); ctx.fill();
+  } else {
+    // Full NTW sprite
+    _drawNTWSoldier(ctx, sx, sy, facing, uniformColor, darkColor);
+  }
+}
+
+// ── NTW-style top-down soldier sprite (only used when zoomed in) ─────
 function _drawNTWSoldier(ctx, sx, sy, facing, uniformColor, darkColor) {
-  const fwX = Math.sin(facing);   // forward screen vector
+  const fwX = Math.sin(facing);
   const fwY = -Math.cos(facing);
-  const rtX = Math.cos(facing);   // right screen vector
+  const rtX = Math.cos(facing);
   const rtY = Math.sin(facing);
 
-  // ── Drop shadow ──
+  // Drop shadow
   ctx.fillStyle = 'rgba(0,0,0,0.22)';
   ctx.beginPath();
   ctx.ellipse(sx + 1.2, sy + 1.2, 5.5, 3.5, facing, 0, Math.PI * 2);
   ctx.fill();
 
-  // ── Musket — extends forward from right shoulder ──
-  const msx = sx + rtX * 2.2 + fwX * 1;
-  const msy = sy + rtY * 2.2 + fwY * 1;
+  // Musket
+  const msx = sx + rtX * 2.2 + fwX;
+  const msy = sy + rtY * 2.2 + fwY;
   ctx.strokeStyle = '#1a0e00';
   ctx.lineWidth   = 1.8;
   ctx.lineCap     = 'round';
@@ -617,57 +644,44 @@ function _drawNTWSoldier(ctx, sx, sy, facing, uniformColor, darkColor) {
   ctx.moveTo(msx, msy);
   ctx.lineTo(msx + fwX * 10, msy + fwY * 10);
   ctx.stroke();
-  // Bayonet glint
   ctx.strokeStyle = 'rgba(220,220,255,0.7)';
   ctx.lineWidth   = 0.8;
   ctx.beginPath();
-  ctx.moveTo(msx + fwX * 9, msy + fwY * 9);
+  ctx.moveTo(msx + fwX * 9,  msy + fwY * 9);
   ctx.lineTo(msx + fwX * 12, msy + fwY * 12);
   ctx.stroke();
 
-  // ── Body — elongated ellipse oriented along facing ──
+  // Body
   ctx.fillStyle = '#111';
-  ctx.beginPath();
-  ctx.ellipse(sx, sy, 5, 3.2, facing, 0, Math.PI * 2);
-  ctx.fill();
-
+  ctx.beginPath(); ctx.ellipse(sx, sy, 5, 3.2, facing, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = uniformColor;
-  ctx.beginPath();
-  ctx.ellipse(sx, sy, 4, 2.5, facing, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.beginPath(); ctx.ellipse(sx, sy, 4, 2.5, facing, 0, Math.PI * 2); ctx.fill();
 
-  // White crossbelt (thin diagonal lines on body)
+  // Crossbelt
   ctx.strokeStyle = 'rgba(255,255,255,0.65)';
   ctx.lineWidth   = 1;
   ctx.beginPath();
   ctx.moveTo(sx - rtX * 2 - fwX * 1.5, sy - rtY * 2 - fwY * 1.5);
-  ctx.lineTo(sx + rtX * 1 + fwX * 1.5, sy + rtY * 1 + fwY * 1.5);
+  ctx.lineTo(sx + rtX * 1   + fwX * 1.5, sy + rtY * 1   + fwY * 1.5);
   ctx.stroke();
 
-  // ── Head — circle just forward of body centre ──
+  // Head
   const hx = sx + fwX * 3.2;
   const hy = sy + fwY * 3.2;
   ctx.fillStyle = '#111';
   ctx.beginPath(); ctx.arc(hx, hy, 3.8, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#e8a868';   // skin
-  ctx.beginPath(); ctx.arc(hx, hy, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#e8a868';
+  ctx.beginPath(); ctx.arc(hx, hy, 3,   0, Math.PI * 2); ctx.fill();
 
-  // ── Shako hat — small ellipse on top of head, darker ──
+  // Shako hat
   const hatX = hx + fwX * 0.5;
   const hatY = hy + fwY * 0.5;
   ctx.fillStyle = '#111';
-  ctx.beginPath();
-  ctx.ellipse(hatX, hatY, 3.5, 2.2, facing, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.beginPath(); ctx.ellipse(hatX, hatY, 3.5, 2.2, facing, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = darkColor;
-  ctx.beginPath();
-  ctx.ellipse(hatX, hatY, 2.8, 1.7, facing, 0, Math.PI * 2);
-  ctx.fill();
-  // Hat badge glint
+  ctx.beginPath(); ctx.ellipse(hatX, hatY, 2.8, 1.7, facing, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = 'rgba(255,220,80,0.9)';
-  ctx.beginPath();
-  ctx.arc(hatX + fwX * 0.4, hatY + fwY * 0.4, 0.9, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.beginPath(); ctx.arc(hatX + fwX * 0.4, hatY + fwY * 0.4, 0.9, 0, Math.PI * 2); ctx.fill();
 }
 
 // Darken a hex color for hats and shadow details
