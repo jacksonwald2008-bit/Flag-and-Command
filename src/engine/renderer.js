@@ -1,6 +1,6 @@
 import {
   LOD_FAR_MAX, LOD_MID_MAX, TEAM_COLORS, MORALE_STATE,
-  WORLD_W, WORLD_H, DEPLOY_ZONE_PLAYER, DEPLOY_ZONE_AI, SS,
+  WORLD_W, WORLD_H, DEPLOY_ZONE_PLAYER, DEPLOY_ZONE_AI, SS, RANK_DEPTH,
 } from '../constants.js';
 
 const TERRAIN_BG    = '#a8d66e';
@@ -206,76 +206,81 @@ export class Renderer {
   }
 
   _drawUnitClose(unit, selected) {
-    const ctx = this.ctx;
-    const cam = this.camera;
+    const ctx  = this.ctx;
+    const cam  = this.camera;
+    const sx   = cam.wx(unit.x);
+    const sy   = cam.wy(unit.y);
 
-    // Selection outline drawn as a rect around the formation
-    if (selected) {
-      const fw = cam.wLen(unit.frontWidth + 8);
-      const fh = cam.wLen(unit.stats.ranks * 1.8 + 8);
-      const sx = cam.wx(unit.x);
-      const sy = cam.wy(unit.y);
-      ctx.save();
-      ctx.translate(sx, sy);
-      ctx.rotate(unit.facing);
-      ctx.strokeStyle = SELECTION_CLR;
-      ctx.lineWidth   = 2;
-      ctx.strokeRect(-fw / 2, -fh / 2, fw, fh);
-      ctx.restore();
-    }
+    const ranks      = unit.stats.ranks;
+    const alive      = unit.aliveCount;
+    const max        = unit.maxCount;
+    const aliveRatio = max > 0 ? alive / max : 0;
+    const teamColor  = TEAM_COLORS[unit.team];
 
-    // Draw each alive soldier as a pin figure
-    const teamColor = TEAM_COLORS[unit.team];
-    for (const s of unit.soldiers) {
-      if (s.state === SS.DEAD) continue;
-      if (!cam.isVisible(s.x, s.y, 3)) continue;
-      this._drawSoldier(s, unit.facing, teamColor, cam);
-    }
+    // Formation size in screen pixels — enforce readable minimums
+    const fw = Math.max(42, cam.wLen(unit.frontWidth + 4));
+    const fh = Math.max(14 * ranks, cam.wLen(ranks * RANK_DEPTH + 2));
 
-    // Flag on unit center
-    const sx = cam.wx(unit.x);
-    const sy = cam.wy(unit.y);
-    this._drawFlag(unit, sx, sy);
-  }
+    // Draw formation block in rotation-local space
+    ctx.save();
+    ctx.translate(sx, sy);
+    ctx.rotate(unit.facing);
 
-  _drawSoldier(soldier, facing, teamColor, cam) {
-    const ctx = this.ctx;
-    const sx  = cam.wx(soldier.x);
-    const sy  = cam.wy(soldier.y);
-    const fwX = Math.sin(facing);
-    const fwY = -Math.cos(facing);
+    // Dead-zone background
+    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    ctx.fillRect(-fw / 2, -fh / 2, fw, fh);
 
-    // Body
-    const bw = Math.max(3, cam.wLen(0.6));
-    const bh = Math.max(4, cam.wLen(1.0));
+    // Alive fill (team color, shrinks left-to-right as casualties mount)
     ctx.fillStyle = teamColor;
-    ctx.fillRect(sx - bw / 2, sy - bh / 3, bw, bh);
+    ctx.globalAlpha = 0.55;
+    ctx.fillRect(-fw / 2, -fh / 2, fw * aliveRatio, fh);
+    ctx.globalAlpha = 1;
 
-    // Head
-    const hr = Math.max(2, cam.wLen(0.4));
-    ctx.fillStyle = '#f5c8a0';
-    ctx.beginPath();
-    ctx.arc(sx, sy - bh / 3 - hr, hr, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Musket
-    if (cam.scale > 2.5) {
-      const mLen = cam.wLen(1.8);
-      ctx.strokeStyle = '#4a2a10';
+    // Rank dividers
+    for (let r = 1; r < ranks; r++) {
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)';
       ctx.lineWidth   = 1;
       ctx.beginPath();
-      ctx.moveTo(sx + fwX * hr, sy + fwY * hr - bh / 3);
-      ctx.lineTo(sx + fwX * (hr + mLen), sy + fwY * (hr + mLen) - bh / 3);
+      ctx.moveTo(-fw / 2, -fh / 2 + r * (fh / ranks));
+      ctx.lineTo( fw / 2, -fh / 2 + r * (fh / ranks));
       ctx.stroke();
     }
 
-    // Reload flash
-    if (soldier.state === SS.RELOADING && cam.scale > 1.5) {
-      ctx.fillStyle = 'rgba(255,200,0,0.4)';
+    // Soldier figures: fixed count distributed evenly in screen space
+    const perRank  = Math.max(3, Math.min(12, Math.floor(fw / 9)));
+    const totalVis = perRank * ranks;
+    const aliveVis = Math.round(totalVis * aliveRatio);
+
+    for (let i = 0; i < aliveVis; i++) {
+      const rank = Math.floor(i / perRank);
+      const file = i % perRank;
+      const px   = -fw / 2 + (file + 0.5) * (fw / perRank);
+      const py   = -fh / 2 + (rank + 0.38) * (fh / ranks);
+
+      // Body
+      ctx.fillStyle = teamColor;
+      ctx.fillRect(px - 2.5, py, 5, 7);
+
+      // Head
+      ctx.fillStyle = '#f0c090';
       ctx.beginPath();
-      ctx.arc(sx, sy, hr * 2, 0, Math.PI * 2);
+      ctx.arc(px, py - 2, 3, 0, Math.PI * 2);
       ctx.fill();
     }
+
+    // Border
+    ctx.strokeStyle = selected ? SELECTION_CLR : 'rgba(255,255,255,0.22)';
+    ctx.lineWidth   = selected ? 2.5 : 1;
+    ctx.strokeRect(-fw / 2, -fh / 2, fw, fh);
+
+    ctx.restore();
+
+    // Flag — place it at the front-centre of the formation
+    const cos   = Math.cos(unit.facing);
+    const sin   = Math.sin(unit.facing);
+    const flagX = sx + sin * (fh / 2 + 5);
+    const flagY = sy - cos * (fh / 2 + 5);
+    this._drawFlag(unit, flagX, flagY);
   }
 
   _drawFlag(unit, sx, sy) {
