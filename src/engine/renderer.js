@@ -236,19 +236,10 @@ export class Renderer {
       ctx.restore();
     }
 
-    // ── NTW-style soldiers — actual world positions, count scales with zoom ──
-    // maxVis grows with fw (which grows with cam.scale), so zooming in shows more soldiers
-    const maxVis       = Math.max(6, Math.floor(fw / 8) * ranks);
-    const aliveSoldiers = unit.soldiers.filter(s => s.state !== SS.DEAD);
-    const step          = Math.max(1, Math.floor(aliveSoldiers.length / maxVis));
-    const cosF          = Math.cos(unit.facing);
-    const sinF          = Math.sin(unit.facing);
-
-    for (let i = 0; i < aliveSoldiers.length; i += step) {
-      const s  = aliveSoldiers[i];
-      const px = cam.wx(s.x);
-      const py = cam.wy(s.y);
-      _drawNTWSoldier(ctx, px, py, unit.facing, teamColor, darkColor);
+    // ── NTW-style soldiers — all alive soldiers, always ──
+    for (const s of unit.soldiers) {
+      if (s.state === SS.DEAD) continue;
+      _drawNTWSoldier(ctx, cam.wx(s.x), cam.wy(s.y), unit.facing, teamColor, darkColor);
     }
 
     // ── Regimental flag — large, NTW-style, at front-centre of formation ──
