@@ -1,6 +1,7 @@
 import {
   LOD_FAR_MAX, LOD_MID_MAX, TEAM_COLORS, MORALE_STATE,
   WORLD_W, WORLD_H, DEPLOY_ZONE_PLAYER, DEPLOY_ZONE_AI, SS, RANK_DEPTH, SOLDIER_SPACING,
+  MUSKET_RANGE, ARTILLERY_RANGE,
 } from '../constants.js';
 
 const TERRAIN_BG    = '#7ec850'; // brighter cartoon grass
@@ -501,6 +502,57 @@ export class Renderer {
     ctx.stroke();
 
     ctx.restore();
+  }
+
+  // === FIRING RANGE ===
+
+  drawFiringRanges(selectedUnits) {
+    if (!selectedUnits || selectedUnits.length === 0) return;
+    const ctx = this.ctx;
+    const cam = this.camera;
+
+    for (const unit of selectedUnits) {
+      if (unit.isShattered || unit.isDead) continue;
+
+      const sx    = cam.wx(unit.x);
+      const sy    = cam.wy(unit.y);
+      const range = unit.stats.isArtillery ? ARTILLERY_RANGE : MUSKET_RANGE;
+      const r     = cam.wLen(range);
+      if (r < 2) continue;
+
+      // Game angles: 0=north, clockwise.
+      // Canvas arc: 0=east, clockwise.  offset = -PI/2
+      // Firing arc = ±90° from facing → startAngle=facing-PI, endAngle=facing
+      const startAngle = unit.facing - Math.PI;
+      const endAngle   = unit.facing;
+
+      const depleted    = unit.ammo <= 0;
+      const isArtillery = unit.stats.isArtillery;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.arc(sx, sy, r, startAngle, endAngle, false);
+      ctx.closePath();
+
+      if (depleted) {
+        ctx.fillStyle   = 'rgba(100,100,100,0.07)';
+        ctx.strokeStyle = 'rgba(100,100,100,0.25)';
+      } else if (isArtillery) {
+        ctx.fillStyle   = 'rgba(255,150,0,0.07)';
+        ctx.strokeStyle = 'rgba(255,150,0,0.35)';
+      } else {
+        ctx.fillStyle   = 'rgba(140,220,80,0.10)';
+        ctx.strokeStyle = 'rgba(140,220,80,0.40)';
+      }
+
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
   }
 
   // === BOX SELECT ===

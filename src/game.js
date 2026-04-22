@@ -220,6 +220,9 @@ class Game {
       this.renderer.drawDeploymentZones();
     }
 
+    // Firing range arcs for selected units (drawn under everything)
+    this.renderer.drawFiringRanges(this.selectedUnits);
+
     // Units
     const allUnits = [...this.playerArmy, ...this.aiArmy];
     for (const u of allUnits) {
