@@ -46,7 +46,7 @@ export class InputHandler {
     const st  = this.game.state;
     if (st !== 'battle' && st !== 'deployment') return;
 
-    const PAN_SPEED = CAMERA_PAN_SPEED / cam.scale;
+    const PAN_SPEED = (CAMERA_PAN_SPEED / cam.scale) * (this._keys['shift'] ? 1.65 : 1);
     let vx = 0, vy = 0;
     if (this._keys['a']) vx -= 1;
     if (this._keys['d']) vx += 1;
