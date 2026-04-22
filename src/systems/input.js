@@ -236,7 +236,7 @@ export class InputHandler {
       const ranks    = Math.max(2, Math.ceil(units[i].aliveCount / files));
       const alive    = units[i].aliveCount;
       const perRank  = Math.ceil(alive / ranks);
-      const step     = Math.max(1, Math.round(alive / 60)); // cap at ~60 dots per unit
+      const step     = 1;
 
       for (let r = 0; r < ranks; r++) {
         const rankCount = Math.min(perRank, alive - r * perRank);
