@@ -38,15 +38,7 @@ export class InputHandler {
 
   _screenToWorld(e) {
     const cam = this.game.camera;
-    const cx  = this.canvas.width  / 2;
-    const cy  = this.canvas.height / 2;
-    const dx  = e.offsetX - cx;
-    const dy  = e.offsetY - cy;
-    const cos = Math.cos(-cam.rotation);
-    const sin = Math.sin(-cam.rotation);
-    const rx  = dx * cos - dy * sin + cx;
-    const ry  = dx * sin + dy * cos + cy;
-    return { x: cam.sx(rx), y: cam.sy(ry) };
+    return { x: cam.sx(e.offsetX), y: cam.sy(e.offsetY) };
   }
 
   update(dt) {
@@ -55,8 +47,6 @@ export class InputHandler {
     if (st !== 'battle' && st !== 'deployment') return;
 
     const PAN_SPEED = CAMERA_PAN_SPEED / cam.scale;
-    const ROT_SPEED = 1.2;
-
     let vx = 0, vy = 0;
     if (this._keys['a']) vx -= 1;
     if (this._keys['d']) vx += 1;
@@ -64,15 +54,11 @@ export class InputHandler {
     if (this._keys['s']) vy += 1;
 
     if (vx !== 0 || vy !== 0) {
-      const cos = Math.cos(cam.rotation);
-      const sin = Math.sin(cam.rotation);
-      cam.x += (vx * cos - vy * sin) * PAN_SPEED * dt;
-      cam.y += (vx * sin + vy * cos) * PAN_SPEED * dt;
+      cam.x += vx * PAN_SPEED * dt;
+      cam.y += vy * PAN_SPEED * dt;
       cam.clamp();
     }
 
-    if (this._keys['q']) cam.rotation -= ROT_SPEED * dt;
-    if (this._keys['e']) cam.rotation += ROT_SPEED * dt;
   }
 
   _onMouseDown(e) {
@@ -109,10 +95,7 @@ export class InputHandler {
     if (this._mmDown && this._mmLastPos) {
       const sdx = e.offsetX - this._mmLastPos.x;
       const sdy = e.offsetY - this._mmLastPos.y;
-      // Un-rotate drag delta so panning feels correct at any view angle
-      const cos = Math.cos(-cam.rotation);
-      const sin = Math.sin(-cam.rotation);
-      cam.pan(sdx * cos - sdy * sin, sdx * sin + sdy * cos);
+      cam.pan(sdx, sdy);
       this._mmLastPos = { x: e.offsetX, y: e.offsetY };
     }
 
@@ -218,7 +201,7 @@ export class InputHandler {
     const game = this.game;
     const inPlay = game.state === 'battle' || game.state === 'deployment';
 
-    if (inPlay && ['w','a','s','d','q','e',' '].includes(key)) e.preventDefault();
+    if (inPlay && ['w','a','s','d',' '].includes(key)) e.preventDefault();
 
     switch (e.key) {
       case ' ':

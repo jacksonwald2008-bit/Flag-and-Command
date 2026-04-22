@@ -208,22 +208,9 @@ class Game {
 
   _render() {
     const ctx = this.ctx;
-    const cam = this.camera;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     if (this.state === GAME_STATE.ARMY_BUILDER) return;
-
-    // Pre-fill canvas with bg color so rotation corners don't show black
-    ctx.fillStyle = this.map ? (this.map.bgColor || '#7ec850') : '#7ec850';
-    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-    // Apply view rotation around screen center for world content
-    const cx = this.canvas.width  / 2;
-    const cy = this.canvas.height / 2;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(cam.rotation);
-    ctx.translate(-cx, -cy);
 
     // Terrain
     this.renderer.drawTerrain(this.map);
@@ -244,9 +231,7 @@ class Game {
       this.renderer.drawFormationPreview(this.formationDraw.path);
     }
 
-    ctx.restore(); // End rotation — HUD below is always screen-aligned
-
-    // Box select (screen-space, no rotation)
+    // Box select
     this.renderer.drawBoxSelect(this.input.getBoxSelectRect());
 
     // Minimap

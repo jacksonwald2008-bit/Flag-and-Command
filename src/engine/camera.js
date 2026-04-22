@@ -6,7 +6,6 @@ export class Camera {
     this.x = WORLD_W / 2;
     this.y = WORLD_H / 2;
     this.scale = 0.55;
-    this.rotation = 0;
     this.fitToScreen();
     this._isDragging = false;
     this._dragStart = null;
