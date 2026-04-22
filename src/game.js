@@ -37,7 +37,7 @@ class Game {
     this.battleTimer = 0;
     this.battleResult = null;
 
-    this.formationDraw = { active: false, path: [] };
+    this.formationDraw = { active: false, corners: null };
 
     this.ai         = new AIController(this);
     this.armyBuilderUI = new ArmyBuilderUI(this);
@@ -226,9 +226,9 @@ class Game {
       this.renderer.drawUnit(u, this.selectedUnits.includes(u));
     }
 
-    // Formation draw preview
-    if (this.formationDraw.active && this.formationDraw.path.length > 1) {
-      this.renderer.drawFormationPreview(this.formationDraw.path);
+    // Formation drag preview
+    if (this.formationDraw.active && this.formationDraw.corners) {
+      this.renderer.drawFormationPreview(this.formationDraw);
     }
 
     // Box select

@@ -214,15 +214,14 @@ export class Renderer {
     const darkColor = _darkenHex(teamColor);
     const cosF      = Math.cos(unit.facing);
     const sinF      = Math.sin(unit.facing);
-    const ranks     = unit.stats.ranks;
+    const ranks     = unit.currentRanks;
     const alive     = unit.aliveCount;
     const max       = unit.maxCount;
 
-    // Compact visual block — 1.2 m display-spacing keeps the rectangle at a readable size
-    // regardless of actual SOLDIER_SPACING; aspect ratio is locked so shape never drifts with zoom
+    // Compact visual block — width from display spacing, height scales with rank count
     const displayW = (alive / ranks) * 1.2 + 4;
     const fw = Math.max(36, cam.wLen(displayW));
-    const fh = ranks === 1 ? fw / 4.0 : ranks === 2 ? fw / 3.0 : fw / 2.2;
+    const fh = Math.max(8, fw * ranks / 6.0);
 
     if (cam.scale < 1.0) {
       // ── FAR VIEW: solid formation rectangle, like the reference screenshot ──
@@ -422,21 +421,57 @@ export class Renderer {
 
   // === FORMATION PREVIEW ===
 
-  drawFormationPreview(path) {
-    if (!path || path.length < 2) return;
+  drawFormationPreview(fd) {
+    if (!fd || !fd.active || !fd.corners) return;
     const ctx = this.ctx;
     const cam = this.camera;
+    const [p1, p2, p3, p4] = fd.corners;
+
     ctx.save();
-    ctx.strokeStyle = 'rgba(255,230,0,0.7)';
-    ctx.lineWidth   = 2;
-    ctx.setLineDash([6, 4]);
+
+    // Filled rectangle
     ctx.beginPath();
-    ctx.moveTo(cam.wx(path[0].x), cam.wy(path[0].y));
-    for (let i = 1; i < path.length; i++) {
-      ctx.lineTo(cam.wx(path[i].x), cam.wy(path[i].y));
-    }
+    ctx.moveTo(cam.wx(p1.x), cam.wy(p1.y));
+    ctx.lineTo(cam.wx(p2.x), cam.wy(p2.y));
+    ctx.lineTo(cam.wx(p3.x), cam.wy(p3.y));
+    ctx.lineTo(cam.wx(p4.x), cam.wy(p4.y));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255,230,0,0.10)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,230,0,0.70)';
+    ctx.lineWidth   = 1.5;
+    ctx.setLineDash([6, 3]);
     ctx.stroke();
     ctx.setLineDash([]);
+
+    // Front line drawn bright/solid so the player knows which edge is the front
+    ctx.strokeStyle = 'rgba(255,255,120,0.95)';
+    ctx.lineWidth   = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(cam.wx(p1.x), cam.wy(p1.y));
+    ctx.lineTo(cam.wx(p2.x), cam.wy(p2.y));
+    ctx.stroke();
+
+    // Dividers between unit slices when multiple units are selected
+    if (fd.unitCount > 1) {
+      const n = fd.unitCount;
+      ctx.strokeStyle = 'rgba(255,230,0,0.45)';
+      ctx.lineWidth   = 1;
+      ctx.setLineDash([3, 4]);
+      for (let i = 1; i < n; i++) {
+        const t  = i / n;
+        const fx = p1.x + (p2.x - p1.x) * t;
+        const fy = p1.y + (p2.y - p1.y) * t;
+        const rx = p4.x + (p3.x - p4.x) * t;
+        const ry = p4.y + (p3.y - p4.y) * t;
+        ctx.beginPath();
+        ctx.moveTo(cam.wx(fx), cam.wy(fy));
+        ctx.lineTo(cam.wx(rx), cam.wy(ry));
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+    }
+
     ctx.restore();
   }
 

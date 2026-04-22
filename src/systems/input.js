@@ -1,8 +1,7 @@
-import { TEAM_PLAYER, CAMERA_PAN_SPEED } from '../constants.js';
-import { moveToPoint, pathToFormationLine } from './formation.js';
+import { TEAM_PLAYER, CAMERA_PAN_SPEED, SOLDIER_SPACING, RANK_DEPTH } from '../constants.js';
+import { moveToPoint } from './formation.js';
 
-const DRAG_THRESHOLD  = 8;   // pixels before treating as drag
-const PATH_SAMPLE_PX  = 12;  // pixels between path samples
+const DRAG_THRESHOLD = 8; // pixels before treating as drag
 
 export class InputHandler {
   constructor(canvas, game) {
@@ -14,11 +13,10 @@ export class InputHandler {
     this._boxEnd    = null;
     this._isBoxing  = false;
 
-    // Formation draw (right-drag) state
-    this._rmDown     = false;
-    this._rmDownPos  = null;
-    this._rmPath     = [];
-    this._lastSample = null;
+    // Formation drag (right-drag) state
+    this._rmDown       = false;
+    this._rmDownPos    = null;  // screen coords of mousedown
+    this._rmStartWorld = null;  // world coords of mousedown (front-left anchor)
 
     // Middle-mouse pan
     this._mmDown     = false;
@@ -79,13 +77,11 @@ export class InputHandler {
     }
 
     if (e.button === 2) {
-      // Right mouse — formation draw start
-      this._rmDown    = true;
-      this._rmDownPos = { x: e.offsetX, y: e.offsetY };
-      const wp = this._screenToWorld(e);
-      this._rmPath    = [{ x: wp.x, y: wp.y }];
-      this._lastSample = { x: e.offsetX, y: e.offsetY };
-      this.game.formationDraw = { active: true, path: this._rmPath };
+      // Right mouse — formation drag start (front-left anchor)
+      this._rmDown       = true;
+      this._rmDownPos    = { x: e.offsetX, y: e.offsetY };
+      this._rmStartWorld = this._screenToWorld(e);
+      this.game.formationDraw = { active: false, corners: null };
     }
   }
 
@@ -106,13 +102,17 @@ export class InputHandler {
       if (Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD) this._isBoxing = true;
     }
 
-    if (this._rmDown && this._lastSample) {
-      const dx = e.offsetX - this._lastSample.x;
-      const dy = e.offsetY - this._lastSample.y;
-      if (Math.sqrt(dx * dx + dy * dy) >= PATH_SAMPLE_PX) {
-        const wp = this._screenToWorld(e);
-        this._rmPath.push({ x: wp.x, y: wp.y });
-        this._lastSample = { x: e.offsetX, y: e.offsetY };
+    if (this._rmDown && this._rmStartWorld) {
+      const sdx = e.offsetX - this._rmDownPos.x;
+      const sdy = e.offsetY - this._rmDownPos.y;
+      if (Math.sqrt(sdx * sdx + sdy * sdy) >= DRAG_THRESHOLD) {
+        const endWorld = this._screenToWorld(e);
+        const selected = this.game.selectedUnits.filter(u => u.team === TEAM_PLAYER);
+        if (selected.length > 0) {
+          this.game.formationDraw = this._computeFormationRect(
+            this._rmStartWorld, endWorld, selected,
+          );
+        }
       }
     }
   }
@@ -142,49 +142,97 @@ export class InputHandler {
 
     if (e.button === 2 && this._rmDown) {
       this._rmDown = false;
-      game.formationDraw = { active: false, path: [] };
+      game.formationDraw = { active: false, corners: null };
 
       const selectedPlayerUnits = game.selectedUnits.filter(u => u.team === TEAM_PLAYER);
       if (!selectedPlayerUnits.length) return;
 
-      const startPos = this._rmDownPos;
-      const dx = e.offsetX - startPos.x;
-      const dy = e.offsetY - startPos.y;
-      const dragDist = Math.sqrt(dx * dx + dy * dy);
+      const sdx = e.offsetX - this._rmDownPos.x;
+      const sdy = e.offsetY - this._rmDownPos.y;
+      const dragDist = Math.sqrt(sdx * sdx + sdy * sdy);
 
       if (dragDist < DRAG_THRESHOLD) {
         // Simple right-click: move to point
         const wp = this._screenToWorld(e);
-
-        // Check if clicking on an enemy unit (attack order)
-        const enemyUnit = this._unitAtWorld(wp.x, wp.y, 1); // team 1 = AI
+        const enemyUnit = this._unitAtWorld(wp.x, wp.y, 1);
         if (enemyUnit) {
-          // Attack order: move toward enemy
           for (const u of selectedPlayerUnits) {
-            const dx2 = enemyUnit.x - u.x;
-            const dy2 = enemyUnit.y - u.y;
-            const len = Math.hypot(dx2, dy2);
+            const ex = enemyUnit.x - u.x, ey = enemyUnit.y - u.y;
+            const el = Math.hypot(ex, ey);
             u.moveTo(
-              enemyUnit.x - (dx2 / len) * 30,
-              enemyUnit.y - (dy2 / len) * 30,
-              Math.atan2(dx2, -dy2),
+              enemyUnit.x - (ex / el) * 30,
+              enemyUnit.y - (ey / el) * 30,
+              Math.atan2(ex, -ey),
             );
           }
           return;
         }
-
         moveToPoint(selectedPlayerUnits, wp.x, wp.y);
       } else {
-        // Formation draw
-        const line = pathToFormationLine(this._rmPath);
-        if (line) {
-          const orders = await_distributeUnitsOnLine(line, selectedPlayerUnits);
-          for (let i = 0; i < orders.length; i++) {
-            selectedPlayerUnits[i].moveTo(orders[i].x, orders[i].y, orders[i].facing);
-          }
-        }
+        // Formation drag: place units along dragged front line
+        const endWorld = this._screenToWorld(e);
+        const fd = this._computeFormationRect(this._rmStartWorld, endWorld, selectedPlayerUnits);
+        this._applyFormationRect(fd, selectedPlayerUnits);
       }
-      this._rmPath = [];
+    }
+  }
+
+  // Build the 4-corner formation rectangle from a drag start/end in world coords
+  _computeFormationRect(startW, endW, units) {
+    const dx  = endW.x - startW.x;
+    const dy  = endW.y - startW.y;
+    const len = Math.hypot(dx, dy);
+    if (len < 1) return { active: false, corners: null };
+
+    // Facing: perpendicular to front line, pointing north (toward enemy)
+    let nx = -dy / len;
+    let ny =  dx / len;
+    if (ny > 0) { nx = -nx; ny = -ny; }
+    const facing = Math.atan2(nx, -ny);
+
+    // Depth = deepest rank count among all unit slices × RANK_DEPTH
+    const N = units.length;
+    let maxRanks = 2;
+    for (let i = 0; i < N; i++) {
+      const sliceW = len / N;
+      const files  = Math.max(4, Math.floor(sliceW / SOLDIER_SPACING));
+      const ranks  = Math.max(2, Math.ceil(units[i].aliveCount / files));
+      if (ranks > maxRanks) maxRanks = ranks;
+    }
+    const depth = maxRanks * RANK_DEPTH;
+
+    const fl = startW;
+    const fr = endW;
+    const corners = [
+      { x: fl.x,             y: fl.y },
+      { x: fr.x,             y: fr.y },
+      { x: fr.x + nx * depth, y: fr.y + ny * depth },
+      { x: fl.x + nx * depth, y: fl.y + ny * depth },
+    ];
+
+    return { active: true, corners, facing, frontLeft: fl, frontRight: fr, dragLen: len, unitCount: N };
+  }
+
+  // Move selected units into the dragged formation rectangle
+  _applyFormationRect(fd, units) {
+    if (!fd.active) return;
+    const { frontLeft: fl, frontRight: fr, facing, dragLen } = fd;
+    const dx = fr.x - fl.x;
+    const dy = fr.y - fl.y;
+    const N  = units.length;
+
+    for (let i = 0; i < N; i++) {
+      const t0 = i / N;
+      const t1 = (i + 1) / N;
+      const cx = fl.x + dx * (t0 + t1) / 2;
+      const cy = fl.y + dy * (t0 + t1) / 2;
+
+      const sliceW = dragLen / N;
+      const files  = Math.max(4, Math.floor(sliceW / SOLDIER_SPACING));
+      const ranks  = Math.max(2, Math.ceil(units[i].aliveCount / files));
+
+      units[i].currentRanks = ranks;
+      units[i].moveTo(cx, cy, facing);
     }
   }
 
@@ -270,28 +318,4 @@ export class InputHandler {
     };
   }
 
-  getFormationPath() {
-    return this.game.formationDraw.active ? this._rmPath : null;
-  }
-}
-
-// Helper to avoid circular — inline distribute
-function await_distributeUnitsOnLine(line, units) {
-  const n = units.length;
-  const orders = [];
-  for (let i = 0; i < n; i++) {
-    const t = n === 1 ? 0.5 : i / (n - 1);
-    const px = line.x1 + (line.x2 - line.x1) * t;
-    const py = line.y1 + (line.y2 - line.y1) * t;
-    const toCenterX = 750 - px;
-    const toCenterY = 750 - py;
-    const normCW  = { x:  line.dy, y: -line.dx };
-    const normCCW = { x: -line.dy, y:  line.dx };
-    const dotCW   = normCW.x  * toCenterX + normCW.y  * toCenterY;
-    const dotCCW  = normCCW.x * toCenterX + normCCW.y * toCenterY;
-    const norm    = dotCW > dotCCW ? normCW : normCCW;
-    const facing  = Math.atan2(norm.x, -norm.y);
-    orders.push({ x: px, y: py, facing });
-  }
-  return orders;
 }

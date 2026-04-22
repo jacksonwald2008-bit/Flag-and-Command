@@ -17,6 +17,7 @@ export class Unit {
 
     const stats = UNIT_STATS[type];
     this.stats = stats;
+    this.currentRanks = stats.ranks; // can be overridden by formation drag
 
     // State
     this.state      = US.IDLE;
@@ -84,7 +85,7 @@ export class Unit {
   // Approximate front width in meters
   get frontWidth() {
     const alive = this.aliveCount;
-    const perRank = Math.ceil(alive / this.stats.ranks);
+    const perRank = Math.ceil(alive / this.currentRanks);
     return perRank * SOLDIER_SPACING;
   }
 
@@ -98,7 +99,7 @@ export class Unit {
     const count  = alive.length;
     if (count === 0) return;
 
-    const ranks   = this.stats.ranks;
+    const ranks   = this.currentRanks;
     const perRank = Math.ceil(count / ranks);
     const fwdX = this.fwdX, fwdY = this.fwdY;
     const rtX  = this.rightX, rtY = this.rightY;
