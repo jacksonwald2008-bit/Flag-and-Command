@@ -116,10 +116,17 @@ class Game {
       const dt = rawDt * this.gameSpeed;
       this._update(dt);
     } else if (this.state === GAME_STATE.DEPLOYMENT) {
-      // Still update soldier positions for visual polish
-      const dt = rawDt;
+      // Instant teleport during deployment — snap unit and all soldiers immediately
       for (const u of [...this.playerArmy, ...this.aiArmy]) {
-        u.updateSoldierPositions(dt);
+        if (u.isMoving) {
+          u.x       = u.targetX;
+          u.y       = u.targetY;
+          u.facing  = u.targetFacing;
+          u.isMoving = false;
+          u.state   = 'idle';
+          u.layoutFormation();
+          for (const s of u.soldiers) { s.x = s.tx; s.y = s.ty; }
+        }
       }
     }
 
