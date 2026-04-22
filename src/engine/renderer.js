@@ -521,29 +521,51 @@ export class Renderer {
       const sx = cam.wx(unit.x);
       const sy = cam.wy(unit.y);
 
-      // Pie-slice sector: two straight sides from unit center + curved arc at range
-      // Canvas angle 0=east; game facing 0=north → offset -PI/2
-      // ±90° firing arc → startAngle = facing-PI, endAngle = facing
-      const startAngle = unit.facing - Math.PI;
-      const endAngle   = unit.facing;
+      // Canvas forward angle: game facing 0=north, canvas 0=east → offset -PI/2
+      // Arc spans ±60° from the forward direction (120° total cone)
+      const fwdCanvas = unit.facing - Math.PI / 2;
+      const spread    = Math.PI / 3; // 60°
+      const arcLA     = fwdCanvas - spread;
+      const arcRA     = fwdCanvas + spread;
+
+      // Arc endpoints in screen space
+      const arcLX = sx + r * Math.cos(arcLA);
+      const arcLY = sy + r * Math.sin(arcLA);
+      const arcRX = sx + r * Math.cos(arcRA);
+      const arcRY = sy + r * Math.sin(arcRA);
+
+      // Unit flank positions — lines start at formation edges, not center
+      // Right screen vector matches world right vector: (cos(facing), sin(facing))
+      const hw   = cam.wLen(Math.max(unit.frontWidth / 2, 15));
+      const rtSX = Math.cos(unit.facing);
+      const rtSY = Math.sin(unit.facing);
+      const lfx  = sx - rtSX * hw,  lfy = sy - rtSY * hw;
+      const rfx  = sx + rtSX * hw,  rfy = sy + rtSY * hw;
+
+      const depleted = unit.ammo <= 0;
 
       ctx.save();
+
+      // Fill (closed — includes open bottom edge for canvas fill to work)
       ctx.beginPath();
-      ctx.moveTo(sx, sy);
-      ctx.arc(sx, sy, r, startAngle, endAngle, false);
+      ctx.moveTo(lfx, lfy);
+      ctx.lineTo(arcLX, arcLY);
+      ctx.arc(sx, sy, r, arcLA, arcRA, false);
+      ctx.lineTo(rfx, rfy);
       ctx.closePath();
-
-      if (unit.ammo <= 0) {
-        ctx.fillStyle   = 'rgba(150,150,150,0.05)';
-        ctx.strokeStyle = 'rgba(180,180,180,0.55)';
-      } else {
-        ctx.fillStyle   = 'rgba(210,50,20,0.07)';
-        ctx.strokeStyle = 'rgba(220,70,40,0.85)';
-      }
-
+      ctx.fillStyle = depleted ? 'rgba(150,150,150,0.05)' : 'rgba(210,50,20,0.07)';
       ctx.fill();
-      ctx.lineWidth = 1.8;
+
+      // Stroke — only the 3 outer edges (left line, arc, right line); bottom left open
+      ctx.beginPath();
+      ctx.moveTo(lfx, lfy);
+      ctx.lineTo(arcLX, arcLY);
+      ctx.arc(sx, sy, r, arcLA, arcRA, false);
+      ctx.lineTo(rfx, rfy);
+      ctx.strokeStyle = depleted ? 'rgba(180,180,180,0.55)' : 'rgba(220,70,40,0.85)';
+      ctx.lineWidth   = 1.8;
       ctx.stroke();
+
       ctx.restore();
     }
   }
