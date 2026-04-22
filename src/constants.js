@@ -16,8 +16,8 @@ export const SOLDIER_SPACING = 2.0;  // meters between soldiers in a rank
 export const RANK_DEPTH      = 6.0;  // meters between ranks
 
 // Combat
-export const MUSKET_RANGE     = 200; // yards effective range
-export const ARTILLERY_RANGE  = 400;
+export const MUSKET_RANGE     = 250; // yards effective range
+export const ARTILLERY_RANGE  = 750;
 export const ARTILLERY_AOE    = 8;   // meters blast radius
 export const MELEE_RANGE      = 3;   // meters — triggers melee
 export const BASE_KILL_CHANCE = 0.018; // per hit in a volley
