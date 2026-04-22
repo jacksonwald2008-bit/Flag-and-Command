@@ -218,13 +218,11 @@ export class Renderer {
     const alive     = unit.aliveCount;
     const max       = unit.maxCount;
 
-    // Formation screen-space footprint — maintain true aspect ratio at all zoom levels
-    const worldFw = unit.frontWidth + 2;
-    const worldFh = ranks * RANK_DEPTH + 2;
-    let fw = cam.wLen(worldFw);
-    let fh = cam.wLen(worldFh);
-    const MIN_H = 4; // minimum height in px; scale width proportionally so ratio is preserved
-    if (fh < MIN_H) { fw = fw * MIN_H / fh; fh = MIN_H; }
+    // Compact visual block — 1.2 m display-spacing keeps the rectangle at a readable size
+    // regardless of actual SOLDIER_SPACING; aspect ratio is locked so shape never drifts with zoom
+    const displayW = (alive / ranks) * 1.2 + 4;
+    const fw = Math.max(36, cam.wLen(displayW));
+    const fh = ranks === 1 ? fw / 4.0 : ranks === 2 ? fw / 3.0 : fw / 2.2;
 
     if (cam.scale < 1.0) {
       // ── FAR VIEW: solid formation rectangle, like the reference screenshot ──
