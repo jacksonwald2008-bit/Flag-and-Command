@@ -218,9 +218,13 @@ export class Renderer {
     const alive     = unit.aliveCount;
     const max       = unit.maxCount;
 
-    // Formation screen-space footprint (enforced minimums)
-    const fw = Math.max(52, cam.wLen(unit.frontWidth + 2));
-    const fh = Math.max(14 * ranks, cam.wLen(ranks * RANK_DEPTH + 2));
+    // Formation screen-space footprint — maintain true aspect ratio at all zoom levels
+    const worldFw = unit.frontWidth + 2;
+    const worldFh = ranks * RANK_DEPTH + 2;
+    let fw = cam.wLen(worldFw);
+    let fh = cam.wLen(worldFh);
+    const MIN_H = 4; // minimum height in px; scale width proportionally so ratio is preserved
+    if (fh < MIN_H) { fw = fw * MIN_H / fh; fh = MIN_H; }
 
     if (cam.scale < 1.0) {
       // ── FAR VIEW: solid formation rectangle, like the reference screenshot ──
