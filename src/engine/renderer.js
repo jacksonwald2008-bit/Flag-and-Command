@@ -1,6 +1,6 @@
 import {
   LOD_FAR_MAX, LOD_MID_MAX, TEAM_COLORS, MORALE_STATE,
-  WORLD_W, WORLD_H, DEPLOY_ZONE_PLAYER, DEPLOY_ZONE_AI, SS, RANK_DEPTH,
+  WORLD_W, WORLD_H, DEPLOY_ZONE_PLAYER, DEPLOY_ZONE_AI, SS, RANK_DEPTH, SOLDIER_SPACING,
 } from '../constants.js';
 
 const TERRAIN_BG    = '#7ec850'; // brighter cartoon grass
@@ -429,22 +429,33 @@ export class Renderer {
 
     ctx.save();
 
-    // Filled rectangle
+    // ── Ghost soldier dots ──────────────────────────────────────
+    if (fd.ghosts && fd.ghosts.length > 0) {
+      ctx.fillStyle = 'rgba(255,230,80,0.55)';
+      for (const g of fd.ghosts) {
+        if (!cam.isVisible(g.x, g.y, 4)) continue;
+        ctx.beginPath();
+        ctx.arc(cam.wx(g.x), cam.wy(g.y), 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // ── Rectangle outline ───────────────────────────────────────
     ctx.beginPath();
     ctx.moveTo(cam.wx(p1.x), cam.wy(p1.y));
     ctx.lineTo(cam.wx(p2.x), cam.wy(p2.y));
     ctx.lineTo(cam.wx(p3.x), cam.wy(p3.y));
     ctx.lineTo(cam.wx(p4.x), cam.wy(p4.y));
     ctx.closePath();
-    ctx.fillStyle = 'rgba(255,230,0,0.10)';
+    ctx.fillStyle   = 'rgba(255,230,0,0.07)';
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255,230,0,0.70)';
+    ctx.strokeStyle = 'rgba(255,230,0,0.60)';
     ctx.lineWidth   = 1.5;
     ctx.setLineDash([6, 3]);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Front line drawn bright/solid so the player knows which edge is the front
+    // ── Bright solid front edge ─────────────────────────────────
     ctx.strokeStyle = 'rgba(255,255,120,0.95)';
     ctx.lineWidth   = 2.5;
     ctx.beginPath();
@@ -452,14 +463,13 @@ export class Renderer {
     ctx.lineTo(cam.wx(p2.x), cam.wy(p2.y));
     ctx.stroke();
 
-    // Dividers between unit slices when multiple units are selected
+    // ── Unit-slice dividers ─────────────────────────────────────
     if (fd.unitCount > 1) {
-      const n = fd.unitCount;
-      ctx.strokeStyle = 'rgba(255,230,0,0.45)';
+      ctx.strokeStyle = 'rgba(255,230,0,0.40)';
       ctx.lineWidth   = 1;
       ctx.setLineDash([3, 4]);
-      for (let i = 1; i < n; i++) {
-        const t  = i / n;
+      for (let i = 1; i < fd.unitCount; i++) {
+        const t  = i / fd.unitCount;
         const fx = p1.x + (p2.x - p1.x) * t;
         const fy = p1.y + (p2.y - p1.y) * t;
         const rx = p4.x + (p3.x - p4.x) * t;
@@ -471,6 +481,25 @@ export class Renderer {
       }
       ctx.setLineDash([]);
     }
+
+    // ── Facing arrow on front edge (points toward enemy) ────────
+    const mx  = cam.wx((p1.x + p2.x) / 2);
+    const my  = cam.wy((p1.y + p2.y) / 2);
+    const adx =  Math.sin(fd.facing); // world-space forward = screen-space forward
+    const ady = -Math.cos(fd.facing);
+    const perpX = -ady, perpY = adx;   // 90° rotation
+    const aLen = 20, aHW = 9;
+
+    ctx.fillStyle   = 'rgba(255,255,100,0.95)';
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+    ctx.lineWidth   = 1;
+    ctx.beginPath();
+    ctx.moveTo(mx + adx * aLen,             my + ady * aLen);             // tip
+    ctx.lineTo(mx + perpX * aHW,            my + perpY * aHW);            // left base
+    ctx.lineTo(mx - perpX * aHW,            my - perpY * aHW);            // right base
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
 
     ctx.restore();
   }

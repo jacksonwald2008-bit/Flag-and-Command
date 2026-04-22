@@ -179,38 +179,84 @@ export class InputHandler {
 
   // Build the 4-corner formation rectangle from a drag start/end in world coords
   _computeFormationRect(startW, endW, units) {
-    const dx  = endW.x - startW.x;
-    const dy  = endW.y - startW.y;
+    const fl  = startW;
+    const dx  = endW.x - fl.x;
+    const dy  = endW.y - fl.y;
     const len = Math.hypot(dx, dy);
     if (len < 1) return { active: false, corners: null };
 
-    // Facing: perpendicular to front line, pointing north (toward enemy)
+    const N = units.length;
+
+    // Clamp drag length: max = min-2-rank width per unit, min = 4-file width
+    const minLen = N * 4 * SOLDIER_SPACING;
+    const maxLen = Math.max(minLen,
+      units.reduce((s, u) => s + Math.ceil(u.aliveCount / 2), 0) * SOLDIER_SPACING);
+    const clampedLen = Math.max(minLen, Math.min(maxLen, len));
+
+    // Clamped front-right point
+    const fr = {
+      x: fl.x + (dx / len) * clampedLen,
+      y: fl.y + (dy / len) * clampedLen,
+    };
+
+    // Facing: perpendicular to front line, pointing toward enemy (north = negative y)
     let nx = -dy / len;
     let ny =  dx / len;
     if (ny > 0) { nx = -nx; ny = -ny; }
     const facing = Math.atan2(nx, -ny);
 
-    // Depth = deepest rank count among all unit slices × RANK_DEPTH
-    const N = units.length;
+    // Rectangle extends BEHIND the front line (opposite of facing direction)
+    const fwdX = Math.sin(facing), fwdY = -Math.cos(facing);
+    const rtX  = Math.cos(facing), rtY  =  Math.sin(facing);
+    const bx = -fwdX, by = -fwdY; // backward direction
+
     let maxRanks = 2;
     for (let i = 0; i < N; i++) {
-      const sliceW = len / N;
-      const files  = Math.max(4, Math.floor(sliceW / SOLDIER_SPACING));
-      const ranks  = Math.max(2, Math.ceil(units[i].aliveCount / files));
+      const files = Math.max(4, Math.floor((clampedLen / N) / SOLDIER_SPACING));
+      const ranks = Math.max(2, Math.ceil(units[i].aliveCount / files));
       if (ranks > maxRanks) maxRanks = ranks;
     }
     const depth = maxRanks * RANK_DEPTH;
 
-    const fl = startW;
-    const fr = endW;
     const corners = [
-      { x: fl.x,             y: fl.y },
-      { x: fr.x,             y: fr.y },
-      { x: fr.x + nx * depth, y: fr.y + ny * depth },
-      { x: fl.x + nx * depth, y: fl.y + ny * depth },
+      { x: fl.x,              y: fl.y },
+      { x: fr.x,              y: fr.y },
+      { x: fr.x + bx * depth, y: fr.y + by * depth },
+      { x: fl.x + bx * depth, y: fl.y + by * depth },
     ];
 
-    return { active: true, corners, facing, frontLeft: fl, frontRight: fr, dragLen: len, unitCount: N };
+    // Ghost soldier positions for preview dots
+    const ghosts = [];
+    for (let i = 0; i < N; i++) {
+      const t  = (i + 0.5) / N;
+      const cx = fl.x + (fr.x - fl.x) * t;
+      const cy = fl.y + (fr.y - fl.y) * t;
+      const sliceW   = clampedLen / N;
+      const files    = Math.max(4, Math.floor(sliceW / SOLDIER_SPACING));
+      const ranks    = Math.max(2, Math.ceil(units[i].aliveCount / files));
+      const alive    = units[i].aliveCount;
+      const perRank  = Math.ceil(alive / ranks);
+      const step     = Math.max(1, Math.round(alive / 60)); // cap at ~60 dots per unit
+
+      for (let r = 0; r < ranks; r++) {
+        const rankCount = Math.min(perRank, alive - r * perRank);
+        if (rankCount <= 0) break;
+        for (let f = 0; f < rankCount; f += step) {
+          const offR = (f - (rankCount - 1) / 2) * SOLDIER_SPACING;
+          const offB = r * RANK_DEPTH;
+          ghosts.push({
+            x: cx + rtX * offR + bx * offB,
+            y: cy + rtY * offR + by * offB,
+          });
+        }
+      }
+    }
+
+    return {
+      active: true, corners, facing,
+      frontLeft: fl, frontRight: fr,
+      dragLen: clampedLen, unitCount: N, ghosts,
+    };
   }
 
   // Move selected units into the dragged formation rectangle
