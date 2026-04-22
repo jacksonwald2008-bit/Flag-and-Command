@@ -1,4 +1,4 @@
-import { TEAM_PLAYER } from '../constants.js';
+import { TEAM_PLAYER, CAMERA_PAN_SPEED } from '../constants.js';
 import { moveToPoint, pathToFormationLine } from './formation.js';
 
 const DRAG_THRESHOLD  = 8;   // pixels before treating as drag
@@ -24,17 +24,55 @@ export class InputHandler {
     this._mmDown     = false;
     this._mmLastPos  = null;
 
+    // Held keys
+    this._keys = {};
+
     canvas.addEventListener('mousedown',  e => this._onMouseDown(e));
     canvas.addEventListener('mousemove',  e => this._onMouseMove(e));
     canvas.addEventListener('mouseup',    e => this._onMouseUp(e));
     canvas.addEventListener('wheel',      e => this._onWheel(e), { passive: false });
     canvas.addEventListener('contextmenu', e => e.preventDefault());
     window.addEventListener('keydown',    e => this._onKeyDown(e));
+    window.addEventListener('keyup',      e => this._onKeyUp(e));
   }
 
   _screenToWorld(e) {
     const cam = this.game.camera;
-    return { x: cam.sx(e.offsetX), y: cam.sy(e.offsetY) };
+    const cx  = this.canvas.width  / 2;
+    const cy  = this.canvas.height / 2;
+    const dx  = e.offsetX - cx;
+    const dy  = e.offsetY - cy;
+    const cos = Math.cos(-cam.rotation);
+    const sin = Math.sin(-cam.rotation);
+    const rx  = dx * cos - dy * sin + cx;
+    const ry  = dx * sin + dy * cos + cy;
+    return { x: cam.sx(rx), y: cam.sy(ry) };
+  }
+
+  update(dt) {
+    const cam = this.game.camera;
+    const st  = this.game.state;
+    if (st !== 'battle' && st !== 'deployment') return;
+
+    const PAN_SPEED = CAMERA_PAN_SPEED / cam.scale;
+    const ROT_SPEED = 1.2;
+
+    let vx = 0, vy = 0;
+    if (this._keys['a']) vx -= 1;
+    if (this._keys['d']) vx += 1;
+    if (this._keys['w']) vy -= 1;
+    if (this._keys['s']) vy += 1;
+
+    if (vx !== 0 || vy !== 0) {
+      const cos = Math.cos(cam.rotation);
+      const sin = Math.sin(cam.rotation);
+      cam.x += (vx * cos - vy * sin) * PAN_SPEED * dt;
+      cam.y += (vx * sin + vy * cos) * PAN_SPEED * dt;
+      cam.clamp();
+    }
+
+    if (this._keys['q']) cam.rotation -= ROT_SPEED * dt;
+    if (this._keys['e']) cam.rotation += ROT_SPEED * dt;
   }
 
   _onMouseDown(e) {
@@ -69,9 +107,12 @@ export class InputHandler {
     const cam = this.game.camera;
 
     if (this._mmDown && this._mmLastPos) {
-      const dx = e.offsetX - this._mmLastPos.x;
-      const dy = e.offsetY - this._mmLastPos.y;
-      cam.pan(dx, dy);
+      const sdx = e.offsetX - this._mmLastPos.x;
+      const sdy = e.offsetY - this._mmLastPos.y;
+      // Un-rotate drag delta so panning feels correct at any view angle
+      const cos = Math.cos(-cam.rotation);
+      const sin = Math.sin(-cam.rotation);
+      cam.pan(sdx * cos - sdy * sin, sdx * sin + sdy * cos);
       this._mmLastPos = { x: e.offsetX, y: e.offsetY };
     }
 
@@ -171,10 +212,16 @@ export class InputHandler {
   }
 
   _onKeyDown(e) {
+    const key  = e.key.toLowerCase();
+    this._keys[key] = true;
+
     const game = this.game;
+    const inPlay = game.state === 'battle' || game.state === 'deployment';
+
+    if (inPlay && ['w','a','s','d','q','e',' '].includes(key)) e.preventDefault();
+
     switch (e.key) {
       case ' ':
-        e.preventDefault();
         game.togglePause();
         break;
       case '1': game.setSpeed(1); break;
@@ -184,6 +231,10 @@ export class InputHandler {
         game.selectedUnits = [];
         break;
     }
+  }
+
+  _onKeyUp(e) {
+    this._keys[e.key.toLowerCase()] = false;
   }
 
   _singleSelect(wx, wy, additive) {

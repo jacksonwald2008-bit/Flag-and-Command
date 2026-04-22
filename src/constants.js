@@ -12,7 +12,7 @@ export const LOD_FAR_MAX  = 0.5;  // below → dots
 export const LOD_MID_MAX  = 1.8;  // below → chevrons; above → pin figures
 
 // Formation geometry
-export const SOLDIER_SPACING = 1.0;  // meters between soldiers in a rank
+export const SOLDIER_SPACING = 2.5;  // meters between soldiers in a rank
 export const RANK_DEPTH      = 1.8;  // meters between ranks
 
 // Combat
