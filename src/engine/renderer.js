@@ -218,9 +218,8 @@ export class Renderer {
     const alive     = unit.aliveCount;
     const max       = unit.maxCount;
 
-    // Compact visual block — width from display spacing, height scales with rank count
-    const displayW = (alive / ranks) * 1.2 + 4;
-    const fw = Math.max(36, cam.wLen(displayW));
+    // Compact visual block — width matches actual soldier spread, height scales with rank count
+    const fw = Math.max(36, cam.wLen(unit.frontWidth + SOLDIER_SPACING));
     const fh = Math.max(8, fw * ranks / 6.0);
 
     if (cam.scale < 1.0) {
