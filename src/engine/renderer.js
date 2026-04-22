@@ -515,50 +515,35 @@ export class Renderer {
       if (unit.isShattered || unit.isDead) continue;
 
       const range = unit.stats.isArtillery ? ARTILLERY_RANGE : MUSKET_RANGE;
+      const r     = cam.wLen(range);
+      if (r < 4) continue;
 
-      // Forward and right unit vectors (world space)
-      const fwdX =  Math.sin(unit.facing);
-      const fwdY = -Math.cos(unit.facing);
-      const rtX  =  Math.cos(unit.facing);
-      const rtY  =  Math.sin(unit.facing);
+      const sx = cam.wx(unit.x);
+      const sy = cam.wy(unit.y);
 
-      // Trapezoid: narrow at unit front, wide at max range (±45° spread)
-      const nearHW = Math.max(unit.frontWidth / 2, 15);
-      const farHW  = range * Math.tan(Math.PI / 4); // ±45°
-
-      const toS = (wx, wy) => [cam.wx(wx), cam.wy(wy)];
-      const [nlx, nly] = toS(unit.x - rtX * nearHW,               unit.y - rtY * nearHW);
-      const [nrx, nry] = toS(unit.x + rtX * nearHW,               unit.y + rtY * nearHW);
-      const [frx, fry] = toS(unit.x + rtX * farHW + fwdX * range, unit.y + rtY * farHW + fwdY * range);
-      const [flx, fly] = toS(unit.x - rtX * farHW + fwdX * range, unit.y - rtY * farHW + fwdY * range);
-
-      const depleted    = unit.ammo <= 0;
-      const isArtillery = unit.stats.isArtillery;
+      // Pie-slice sector: two straight sides from unit center + curved arc at range
+      // Canvas angle 0=east; game facing 0=north → offset -PI/2
+      // ±90° firing arc → startAngle = facing-PI, endAngle = facing
+      const startAngle = unit.facing - Math.PI;
+      const endAngle   = unit.facing;
 
       ctx.save();
       ctx.beginPath();
-      ctx.moveTo(nlx, nly);
-      ctx.lineTo(nrx, nry);
-      ctx.lineTo(frx, fry);
-      ctx.lineTo(flx, fly);
+      ctx.moveTo(sx, sy);
+      ctx.arc(sx, sy, r, startAngle, endAngle, false);
       ctx.closePath();
 
-      if (depleted) {
-        ctx.fillStyle   = 'rgba(120,120,120,0.20)';
-        ctx.strokeStyle = 'rgba(160,160,160,0.60)';
-      } else if (isArtillery) {
-        ctx.fillStyle   = 'rgba(255,150,0,0.20)';
-        ctx.strokeStyle = 'rgba(255,170,30,0.75)';
+      if (unit.ammo <= 0) {
+        ctx.fillStyle   = 'rgba(150,150,150,0.05)';
+        ctx.strokeStyle = 'rgba(180,180,180,0.55)';
       } else {
-        ctx.fillStyle   = 'rgba(140,220,80,0.22)';
-        ctx.strokeStyle = 'rgba(160,240,90,0.80)';
+        ctx.fillStyle   = 'rgba(210,50,20,0.07)';
+        ctx.strokeStyle = 'rgba(220,70,40,0.85)';
       }
 
       ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.setLineDash([6, 4]);
+      ctx.lineWidth = 1.8;
       ctx.stroke();
-      ctx.setLineDash([]);
       ctx.restore();
     }
   }
