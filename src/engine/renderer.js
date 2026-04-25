@@ -281,13 +281,13 @@ export class Renderer {
           _drawSprite(ctx, sprite, cam.wx(s.x), cam.wy(s.y), unit.facing, sw, sh, teamColor);
         }
       } else {
-        const r = Math.max(2, cam.wLen(2.5));
-        ctx.fillStyle = teamColor;
         for (const s of unit.soldiers) {
           if (s.state === SS.DEAD) continue;
-          ctx.beginPath();
-          ctx.arc(cam.wx(s.x), cam.wy(s.y), r, 0, Math.PI * 2);
-          ctx.fill();
+          const sx2 = cam.wx(s.x), sy2 = cam.wy(s.y);
+          ctx.fillStyle = '#111';
+          ctx.beginPath(); ctx.arc(sx2, sy2, 5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = teamColor;
+          ctx.beginPath(); ctx.arc(sx2, sy2, 4, 0, Math.PI * 2); ctx.fill();
         }
       }
     }
