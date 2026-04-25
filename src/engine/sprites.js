@@ -25,27 +25,11 @@ const _INF = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 28">
   <rect x="16.2" y="3"   width="1.8" height="2.5" rx="0.4" fill="#aaa"/>
 </svg>`;
 
-// ── Cavalry — chess-knight silhouette, forward = top of image ────────
-// A simple side-profile horse head + neck + base, like a chess knight.
-// The piece faces right (→) in SVG space; the renderer rotates to facing.
-const _CAV = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 32">
-  <!-- drop shadow -->
-  <ellipse cx="14" cy="29.5" rx="9" ry="2" fill="rgba(0,0,0,0.25)"/>
-  <!-- base block -->
-  <rect x="5" y="23" width="18" height="5" rx="2" fill="{C}" stroke="rgba(0,0,0,0.5)" stroke-width="0.8"/>
-  <!-- neck -->
-  <path d="M10 23 Q9 14 13 10 Q11 16 15 18 L14 23Z" fill="{C}" stroke="rgba(0,0,0,0.4)" stroke-width="0.6"/>
-  <!-- head -->
-  <path d="M13 10 Q11 4 16 2 Q22 1 23 6 Q23 10 20 12 Q18 14 15 14 Q13 13 13 10Z"
-        fill="{C}" stroke="rgba(0,0,0,0.55)" stroke-width="0.9"/>
-  <!-- ear -->
-  <path d="M15 3 Q17 0 19 2" fill="none" stroke="rgba(0,0,0,0.6)" stroke-width="1.2" stroke-linecap="round"/>
-  <!-- eye -->
-  <circle cx="19" cy="6.5" r="1.2" fill="rgba(0,0,0,0.75)"/>
-  <!-- nostril -->
-  <ellipse cx="22" cy="9.5" rx="1" ry="0.7" fill="rgba(0,0,0,0.45)"/>
-  <!-- mane highlight -->
-  <path d="M13 10 Q12 8 13 6 Q14 4 15 5" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1" stroke-linecap="round"/>
+// ── Cavalry — circle with cross ──────────────────────────────────────
+const _CAV = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+  <circle cx="10" cy="10" r="8.5" fill="{C}" stroke="rgba(0,0,0,0.6)" stroke-width="1.5"/>
+  <line x1="10" y1="2" x2="10" y2="18" stroke="rgba(0,0,0,0.7)" stroke-width="2" stroke-linecap="round"/>
+  <line x1="2" y1="10" x2="18" y2="10" stroke="rgba(0,0,0,0.7)" stroke-width="2" stroke-linecap="round"/>
 </svg>`;
 
 // ── Cannon (top-down, barrel points up = forward) ────────────────────

@@ -275,7 +275,7 @@ export class Renderer {
         _drawCannonSprites(ctx, sx, sy, unit.facing, cam);
       } else if (unit.stats.isCavalry) {
         const sprite = cavalrySprite(teamColor);
-        const sw = cam.wLen(11), sh = sw * (32 / 28);
+        const sw = cam.wLen(9), sh = sw;
         for (const s of unit.soldiers) {
           if (s.state === SS.DEAD) continue;
           _drawSprite(ctx, sprite, cam.wx(s.x), cam.wy(s.y), unit.facing, sw, sh, teamColor);
