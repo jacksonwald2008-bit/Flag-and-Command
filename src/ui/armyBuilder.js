@@ -212,7 +212,8 @@ function _buildArmy(defs, team, zone) {
 
   for (let i = 0; i < n; i++) {
     const x = startX + i * spacing;
-    const y = zone.y + zone.h / 2;
+    // Shift toward the back of the zone so the formation + flag visually centers
+    const y = zone.y + zone.h * (team === TEAM_PLAYER ? 0.65 : 0.35);
     units.push(new Unit(defs[i], team, x, y, facing));
   }
   return units;
