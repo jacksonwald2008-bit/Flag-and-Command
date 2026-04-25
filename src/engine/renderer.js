@@ -221,38 +221,40 @@ export class Renderer {
     const max       = unit.maxCount;
 
     // Compact visual block — width matches actual soldier spread, height scales with rank count
-    const fw = Math.max(36, cam.wLen(unit.frontWidth + SOLDIER_SPACING));
-    const fh = Math.max(8, fw * ranks / 6.0);
+    // Rectangle dimensions matching the actual formation footprint exactly.
+    // unit.x/y = front rank center; formation extends backward (local +Y after rotation).
+    const fw = Math.max(10, cam.wLen(unit.frontWidth));
+    const fh = Math.max(4,  cam.wLen((ranks - 1) * RANK_DEPTH + SOLDIER_SPACING));
 
     if (cam.scale < 1.0) {
-      // ── FAR VIEW: solid formation rectangle, like the reference screenshot ──
+      // ── FAR VIEW: solid formation rectangle ──
       ctx.save();
       ctx.translate(sx, sy);
       ctx.rotate(unit.facing);
 
-      // Shadow
+      // Shadow — offset backward (local +Y) and right
       ctx.fillStyle = 'rgba(0,0,0,0.25)';
-      ctx.fillRect(-fw / 2 + 3, -fh / 2 + 3, fw, fh);
+      ctx.fillRect(-fw / 2 + 3, 3, fw, fh);
 
-      // Main body — team color, full opacity
+      // Main body
       ctx.fillStyle = teamColor;
-      ctx.fillRect(-fw / 2, -fh / 2, fw, fh);
+      ctx.fillRect(-fw / 2, 0, fw, fh);
 
       // Casualties shown as a darker right-side strip
       const deadW = fw * (1 - alive / max);
       if (deadW > 0) {
         ctx.fillStyle = 'rgba(0,0,0,0.45)';
-        ctx.fillRect(fw / 2 - deadW, -fh / 2, deadW, fh);
+        ctx.fillRect(fw / 2 - deadW, 0, deadW, fh);
       }
 
-      // Thin highlight line across top
+      // Thin highlight line across front edge
       ctx.fillStyle = 'rgba(255,255,255,0.25)';
-      ctx.fillRect(-fw / 2, -fh / 2, fw, 2);
+      ctx.fillRect(-fw / 2, 0, fw, 2);
 
       // Border
       ctx.strokeStyle = selected ? SELECTION_CLR : 'rgba(0,0,0,0.7)';
       ctx.lineWidth   = selected ? 2.5 : 1.5;
-      ctx.strokeRect(-fw / 2, -fh / 2, fw, fh);
+      ctx.strokeRect(-fw / 2, 0, fw, fh);
 
       ctx.restore();
 
@@ -266,7 +268,7 @@ export class Renderer {
         ctx.shadowColor = SELECTION_CLR;
         ctx.shadowBlur  = 10;
         ctx.lineWidth   = 3;
-        ctx.strokeRect(-fw / 2 - 3, -fh / 2 - 3, fw + 6, fh + 6);
+        ctx.strokeRect(-fw / 2 - 3, -3, fw + 6, fh + 6);
         ctx.shadowBlur  = 0;
         ctx.restore();
       }
@@ -293,9 +295,9 @@ export class Renderer {
       }
     }
 
-    // Flag always drawn above formation front
-    const flagX = sx + sinF * (fh / 2 + 4);
-    const flagY = sy - cosF * (fh / 2 + 4);
+    // Flag always drawn at the front-center of the formation (unit.x/y = front rank center)
+    const flagX = sx;
+    const flagY = sy;
     this._drawFlag(unit, flagX, flagY, unit.team);
   }
 
@@ -391,10 +393,10 @@ export class Renderer {
     const sy  = cam.wy(unit.y);
 
     // Fixed screen-space size so it's always readable
-    const barW = Math.max(44, cam.wLen(unit.frontWidth + 4));
+    const barW = Math.max(44, cam.wLen(unit.frontWidth));
     const barH = 5;
     const bx   = sx - barW / 2;
-    const by   = sy + Math.max(14, cam.wLen(unit.stats.ranks * RANK_DEPTH / 2 + 2)) + 4;
+    const by   = sy + Math.max(14, cam.wLen((unit.currentRanks - 1) * RANK_DEPTH + SOLDIER_SPACING)) + 6;
 
     // Black outline
     ctx.fillStyle = '#111';

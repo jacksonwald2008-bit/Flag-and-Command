@@ -50,8 +50,8 @@ export const ROUT_SPEED_MULTIPLIER = 2.2;
 export const ROUT_FLEE_DIRECTION   = Math.PI; // flee away from enemy
 
 // Deployment zones (world Y range)
-export const DEPLOY_ZONE_PLAYER = { y: WORLD_H - 280, h: 260, x: 30, w: 1440 };
-export const DEPLOY_ZONE_AI     = { y: 10,             h: 260, x: 30, w: 1440 };
+export const DEPLOY_ZONE_PLAYER = { y: WORLD_H - 460, h: 440, x: 30, w: 1440 };
+export const DEPLOY_ZONE_AI     = { y: 10,             h: 440, x: 30, w: 1440 };
 
 // Camera
 export const CAMERA_ZOOM_MIN = 0.15;
