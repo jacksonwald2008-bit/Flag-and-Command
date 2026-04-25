@@ -283,7 +283,9 @@ export class Renderer {
           ctx.fillStyle = teamColor;
           ctx.beginPath(); ctx.arc(sx2, sy2, r, 0, Math.PI * 2); ctx.fill();
         }
-        _drawCannonSprites(ctx, sx, sy, unit.facing, cam);
+        const fwdSX = Math.sin(unit.facing), fwdSY = -Math.cos(unit.facing);
+        const cannonFwd = cam.wLen(RANK_DEPTH);
+        _drawCannonSprites(ctx, sx + fwdSX * cannonFwd, sy + fwdSY * cannonFwd, unit.facing, cam);
       } else if (unit.stats.isCavalry) {
         const sprite = cavalrySprite(teamColor);
         const sw = cam.wLen(9), sh = sw;
