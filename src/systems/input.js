@@ -133,7 +133,7 @@ export class InputHandler {
       } else {
         // Single click — select unit under cursor or deselect
         const wp = this._screenToWorld(e);
-        this._singleSelect(wp.x, wp.y, e.shiftKey);
+        this._singleSelect(wp.x, wp.y, e.shiftKey || e.ctrlKey);
       }
       this._boxStart = null;
       this._boxEnd   = null;
@@ -147,18 +147,6 @@ export class InputHandler {
       const sdx = e.offsetX - this._rmDownPos.x;
       const sdy = e.offsetY - this._rmDownPos.y;
       const dragDist = Math.sqrt(sdx * sdx + sdy * sdy);
-
-      // Ctrl+right-click: additive select player unit under cursor
-      if (e.ctrlKey && dragDist < DRAG_THRESHOLD) {
-        const wp   = this._screenToWorld(e);
-        const unit = this._unitAtWorld(wp.x, wp.y, TEAM_PLAYER);
-        if (unit) {
-          const idx = game.selectedUnits.indexOf(unit);
-          if (idx === -1) game.selectedUnits.push(unit);
-          else            game.selectedUnits.splice(idx, 1);
-        }
-        return;
-      }
 
       const selectedPlayerUnits = game.selectedUnits.filter(u => u.team === TEAM_PLAYER);
       if (!selectedPlayerUnits.length) return;
