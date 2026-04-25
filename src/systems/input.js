@@ -300,6 +300,13 @@ export class InputHandler {
 
     if (inPlay && ['w','a','s','d',' '].includes(key)) e.preventDefault();
 
+    // Ctrl+A — select all player units
+    if (e.ctrlKey && key === 'a' && inPlay) {
+      e.preventDefault();
+      game.selectedUnits = game.playerArmy.filter(u => !u.isShattered && !u.isDead);
+      return;
+    }
+
     switch (e.key) {
       case ' ':
         game.togglePause();

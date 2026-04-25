@@ -132,9 +132,15 @@ export class BattleUISystem {
       <div class="uc-morale-bg"><div class="uc-morale-fill" style="width:100%;background:#22bb44"></div></div>
       <div class="uc-state" style="color:#44ee66">Steady</div>
     `;
-    div.addEventListener('click', () => {
-      this.game.selectedUnits = [unit];
-      this.game.camera.centerOn(unit.x, unit.y);
+    div.addEventListener('click', (e) => {
+      if (e.ctrlKey) {
+        const idx = this.game.selectedUnits.indexOf(unit);
+        if (idx === -1) this.game.selectedUnits.push(unit);
+        else            this.game.selectedUnits.splice(idx, 1);
+      } else {
+        this.game.selectedUnits = [unit];
+        this.game.camera.centerOn(unit.x, unit.y);
+      }
     });
     return div;
   }
