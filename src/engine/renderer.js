@@ -274,7 +274,6 @@ export class Renderer {
       }
 
       if (unit.stats.isArtillery) {
-        _drawCannonSprites(ctx, sx, sy, unit.facing, cam);
         const r = Math.min(5, Math.max(2, cam.wLen(SOLDIER_SPACING * 0.38)));
         for (const s of unit.soldiers) {
           if (s.state === SS.DEAD) continue;
@@ -284,6 +283,7 @@ export class Renderer {
           ctx.fillStyle = teamColor;
           ctx.beginPath(); ctx.arc(sx2, sy2, r, 0, Math.PI * 2); ctx.fill();
         }
+        _drawCannonSprites(ctx, sx, sy, unit.facing, cam);
       } else if (unit.stats.isCavalry) {
         const sprite = cavalrySprite(teamColor);
         const sw = cam.wLen(9), sh = sw;
