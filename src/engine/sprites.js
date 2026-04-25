@@ -33,23 +33,26 @@ const _CAV = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
 </svg>`;
 
 // ── Cannon (aerial top-down, barrel points up = forward) ─────────────
-const _CANNON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32">
-  <!-- frame / carriage body -->
-  <rect x="7" y="10" width="10" height="18" rx="2" fill="#7a4e20" stroke="#3e2200" stroke-width="0.8"/>
+const _CANNON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 36">
+  <!-- trail (extends backward from axle) -->
+  <rect x="14" y="22" width="4" height="12" rx="1.5" fill="#5a3810"/>
 
-  <!-- left wheel (brown line parallel to barrel) -->
-  <rect x="3" y="10" width="3" height="18" rx="1.5" fill="#5a3810" stroke="#2a1800" stroke-width="0.7"/>
+  <!-- axle bar -->
+  <rect x="3" y="19" width="26" height="4" rx="1.5" fill="#7a4e20" stroke="#3e2200" stroke-width="0.8"/>
 
-  <!-- right wheel (brown line parallel to barrel) -->
-  <rect x="18" y="10" width="3" height="18" rx="1.5" fill="#5a3810" stroke="#2a1800" stroke-width="0.7"/>
+  <!-- left wheel — brown line parallel to barrel -->
+  <rect x="1" y="13" width="4" height="15" rx="1.5" fill="#6b3e14" stroke="#2a1800" stroke-width="0.8"/>
 
-  <!-- barrel (starts slightly inside the frame) -->
-  <rect x="10" y="2" width="4" height="16" rx="2" fill="#2a2a2a"/>
-  <rect x="11" y="2" width="2" height="13" rx="1" fill="#4a4a4a"/>
+  <!-- right wheel — brown line parallel to barrel -->
+  <rect x="27" y="13" width="4" height="15" rx="1.5" fill="#6b3e14" stroke="#2a1800" stroke-width="0.8"/>
+
+  <!-- barrel -->
+  <rect x="13" y="1"  width="6" height="20" rx="2.5" fill="#2a2a2a"/>
+  <rect x="14" y="1"  width="4" height="17" rx="2"   fill="#4a4a4a"/>
   <!-- muzzle band -->
-  <rect x="9.5" y="2" width="5" height="2.5" rx="1" fill="#1a1a1a"/>
-  <!-- breech where barrel meets frame -->
-  <rect x="9.5" y="14" width="5" height="3" rx="1" fill="#333"/>
+  <rect x="12.5" y="1" width="7" height="3" rx="1.2" fill="#1a1a1a"/>
+  <!-- breech band -->
+  <rect x="12.5" y="17" width="7" height="3" rx="1.2" fill="#333"/>
 </svg>`;
 
 export function infantrySprite(color)  { return _load(_INF,    color); }
