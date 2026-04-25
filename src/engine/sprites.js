@@ -32,20 +32,38 @@ const _CAV = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
   <line x1="2" y1="10" x2="18" y2="10" stroke="rgba(0,0,0,0.7)" stroke-width="2" stroke-linecap="round"/>
 </svg>`;
 
-// ── Cannon (top-down, barrel points up = forward) ────────────────────
-const _CANNON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 32">
-  <ellipse cx="13" cy="29" rx="9"   ry="2.5" fill="rgba(0,0,0,0.28)"/>
-  <circle  cx="13" cy="21" r="9"           fill="#8a5c22"/>
-  <circle  cx="13" cy="21" r="9"           fill="none" stroke="#3e2200" stroke-width="2.2"/>
-  <circle  cx="13" cy="21" r="2.8"         fill="#3e2200"/>
-  <line x1="4"  y1="21" x2="22" y2="21"   stroke="#3e2200" stroke-width="1.8"/>
-  <line x1="13" y1="12" x2="13" y2="30"   stroke="#3e2200" stroke-width="1.8"/>
-  <line x1="6.5" y1="14.5" x2="19.5" y2="27.5" stroke="#3e2200" stroke-width="1.4"/>
-  <line x1="19.5" y1="14.5" x2="6.5" y2="27.5" stroke="#3e2200" stroke-width="1.4"/>
-  <rect x="9"  y="1"  width="8" height="22" rx="3.5" fill="#2a2a2a"/>
-  <rect x="10" y="2"  width="6" height="19" rx="2.5" fill="#585858"/>
-  <rect x="9"  y="1"  width="8" height="3.5" rx="1.5" fill="#1a1a1a"/>
-  <rect x="9"  y="18" width="8" height="3.5" rx="1.5" fill="#383838"/>
+// ── Cannon (aerial top-down, barrel points up = forward) ─────────────
+// Barrel center, two spoked wheels on sides, trail extending back
+const _CANNON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 36">
+  <!-- trail (extends backward from axle) -->
+  <rect x="14" y="22" width="4" height="12" rx="1.5" fill="#5a3810"/>
+
+  <!-- axle bar -->
+  <rect x="3" y="19" width="26" height="4" rx="1.5" fill="#7a4e20" stroke="#3e2200" stroke-width="0.8"/>
+
+  <!-- left wheel -->
+  <circle cx="5"  cy="21" r="5.5" fill="#6b3e14" stroke="#2a1800" stroke-width="1.2"/>
+  <line x1="5"  y1="15.8" x2="5"  y2="26.2" stroke="#2a1800" stroke-width="1"/>
+  <line x1="-.3" y1="21"  x2="10.3" y2="21"  stroke="#2a1800" stroke-width="1"/>
+  <line x1="1.1" y1="17.1" x2="8.9" y2="24.9" stroke="#2a1800" stroke-width="0.8"/>
+  <line x1="8.9" y1="17.1" x2="1.1" y2="24.9" stroke="#2a1800" stroke-width="0.8"/>
+  <circle cx="5"  cy="21" r="1.6" fill="#2a1800"/>
+
+  <!-- right wheel -->
+  <circle cx="27" cy="21" r="5.5" fill="#6b3e14" stroke="#2a1800" stroke-width="1.2"/>
+  <line x1="27" y1="15.8" x2="27" y2="26.2" stroke="#2a1800" stroke-width="1"/>
+  <line x1="21.7" y1="21"  x2="32.3" y2="21"  stroke="#2a1800" stroke-width="1"/>
+  <line x1="23.1" y1="17.1" x2="30.9" y2="24.9" stroke="#2a1800" stroke-width="0.8"/>
+  <line x1="30.9" y1="17.1" x2="23.1" y2="24.9" stroke="#2a1800" stroke-width="0.8"/>
+  <circle cx="27" cy="21" r="1.6" fill="#2a1800"/>
+
+  <!-- barrel -->
+  <rect x="13" y="1"  width="6" height="20" rx="2.5" fill="#2a2a2a"/>
+  <rect x="14" y="1"  width="4" height="17" rx="2"   fill="#4a4a4a"/>
+  <!-- muzzle band -->
+  <rect x="12.5" y="1" width="7" height="3" rx="1.2" fill="#1a1a1a"/>
+  <!-- breech band -->
+  <rect x="12.5" y="17" width="7" height="3" rx="1.2" fill="#333"/>
 </svg>`;
 
 export function infantrySprite(color)  { return _load(_INF,    color); }
