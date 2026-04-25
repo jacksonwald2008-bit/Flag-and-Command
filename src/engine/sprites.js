@@ -25,22 +25,27 @@ const _INF = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 28">
   <rect x="16.2" y="3"   width="1.8" height="2.5" rx="0.4" fill="#aaa"/>
 </svg>`;
 
-// ── Cavalry (top-down, forward = top of image) ───────────────────────
-// Horse body with four legs, uniformed rider on top, shako at front
-const _CAV = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 34">
-  <ellipse cx="11" cy="30" rx="7"   ry="2.5" fill="rgba(0,0,0,0.28)"/>
-  <ellipse cx="11" cy="20" rx="6"   ry="11"  fill="#7a4820"/>
-  <ellipse cx="11" cy="20" rx="6"   ry="11"  fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="0.8"/>
-  <rect x="4"  y="26" width="3.5" height="7" rx="1.8" fill="#5a3210"/>
-  <rect x="14.5" y="26" width="3.5" height="7" rx="1.8" fill="#5a3210"/>
-  <rect x="5"  y="14" width="3.5" height="7" rx="1.8" fill="#5a3210"/>
-  <rect x="13.5" y="14" width="3.5" height="7" rx="1.8" fill="#5a3210"/>
-  <ellipse cx="11" cy="10" rx="4"   ry="6.5" fill="#7a4820"/>
-  <ellipse cx="11" cy="17" rx="4.5" ry="6"   fill="{C}"/>
-  <ellipse cx="11" cy="17" rx="4.5" ry="6"   fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="0.8"/>
-  <ellipse cx="11" cy="9"  rx="3"   ry="3.5" fill="#c8906a"/>
-  <rect x="8.2" y="3.5" width="5.6" height="5.5" rx="1" fill="#111"/>
-  <rect x="7.2" y="8"   width="7.6" height="1.6" rx="0.4" fill="#2a2a2a"/>
+// ── Cavalry — chess-knight silhouette, forward = top of image ────────
+// A simple side-profile horse head + neck + base, like a chess knight.
+// The piece faces right (→) in SVG space; the renderer rotates to facing.
+const _CAV = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 32">
+  <!-- drop shadow -->
+  <ellipse cx="14" cy="29.5" rx="9" ry="2" fill="rgba(0,0,0,0.25)"/>
+  <!-- base block -->
+  <rect x="5" y="23" width="18" height="5" rx="2" fill="{C}" stroke="rgba(0,0,0,0.5)" stroke-width="0.8"/>
+  <!-- neck -->
+  <path d="M10 23 Q9 14 13 10 Q11 16 15 18 L14 23Z" fill="{C}" stroke="rgba(0,0,0,0.4)" stroke-width="0.6"/>
+  <!-- head -->
+  <path d="M13 10 Q11 4 16 2 Q22 1 23 6 Q23 10 20 12 Q18 14 15 14 Q13 13 13 10Z"
+        fill="{C}" stroke="rgba(0,0,0,0.55)" stroke-width="0.9"/>
+  <!-- ear -->
+  <path d="M15 3 Q17 0 19 2" fill="none" stroke="rgba(0,0,0,0.6)" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- eye -->
+  <circle cx="19" cy="6.5" r="1.2" fill="rgba(0,0,0,0.75)"/>
+  <!-- nostril -->
+  <ellipse cx="22" cy="9.5" rx="1" ry="0.7" fill="rgba(0,0,0,0.45)"/>
+  <!-- mane highlight -->
+  <path d="M13 10 Q12 8 13 6 Q14 4 15 5" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1" stroke-linecap="round"/>
 </svg>`;
 
 // ── Cannon (top-down, barrel points up = forward) ────────────────────
