@@ -799,7 +799,7 @@ function _drawSprite(ctx, img, sx, sy, facing, sw, sh, fallbackColor) {
 // ── Artillery: 4 cannon sprites side by side ─────────────────────────
 function _drawCannonSprites(ctx, sx, sy, facing, cam) {
   const sprite = cannonSprite();
-  const sw     = cam.wLen(16), sh = sw * (36 / 32);
+  const sw     = cam.wLen(14), sh = sw * (32 / 24);
   const gap    = cam.wLen(15);
   const rtX    = Math.cos(facing), rtY = Math.sin(facing);
 
