@@ -270,9 +270,18 @@ export class Renderer {
         ctx.restore();
       }
 
-      for (const s of unit.soldiers) {
-        if (s.state === SS.DEAD) continue;
-        _drawSoldierLOD(ctx, cam.wx(s.x), cam.wy(s.y), unit.facing, teamColor, darkColor, cam.scale);
+      if (unit.stats.isArtillery) {
+        _drawCannons(ctx, sx, sy, unit.facing, teamColor, cam);
+      } else if (unit.stats.isCavalry) {
+        for (const s of unit.soldiers) {
+          if (s.state === SS.DEAD) continue;
+          _drawHorse(ctx, cam.wx(s.x), cam.wy(s.y), unit.facing, teamColor);
+        }
+      } else {
+        for (const s of unit.soldiers) {
+          if (s.state === SS.DEAD) continue;
+          _drawSoldierLOD(ctx, cam.wx(s.x), cam.wy(s.y), unit.facing, teamColor, darkColor, cam.scale);
+        }
       }
     }
 
@@ -761,6 +770,62 @@ function _drawSoldierLOD(ctx, sx, sy, facing, uniformColor, darkColor, scale) {
   ctx.beginPath(); ctx.arc(sx, sy, 5, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = uniformColor;
   ctx.beginPath(); ctx.arc(sx, sy, 4, 0, Math.PI * 2); ctx.fill();
+}
+
+// ── Cavalry: horse silhouette ────────────────────────────────────────
+function _drawHorse(ctx, sx, sy, facing, color) {
+  ctx.save();
+  ctx.translate(sx, sy);
+  ctx.rotate(facing);
+  // Body — elongated oval along forward (-Y) axis
+  ctx.fillStyle = '#111';
+  ctx.beginPath(); ctx.ellipse(0, -1, 4, 7, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.ellipse(0, -1, 3.5, 6, 0, 0, Math.PI * 2); ctx.fill();
+  // Head — small circle at the front
+  ctx.fillStyle = '#111';
+  ctx.beginPath(); ctx.arc(0, -8, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(0, -8, 2, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+// ── Artillery: 4 cannon shapes side by side ──────────────────────────
+function _drawCannons(ctx, sx, sy, facing, color, cam) {
+  const gap    = cam.wLen(14); // screen-space gap between cannons
+  const rtX    = Math.cos(facing);
+  const rtY    = Math.sin(facing);
+
+  for (let i = 0; i < 4; i++) {
+    const offset = (i - 1.5) * gap;
+    const cx = sx + rtX * offset;
+    const cy = sy + rtY * offset;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(facing);
+
+    // Wheel
+    ctx.fillStyle = '#5a3010';
+    ctx.beginPath(); ctx.arc(0, 2, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
+    ctx.stroke();
+    // Spoke cross
+    ctx.strokeStyle = '#3a1a00'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(-6, 2); ctx.lineTo(6, 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(0, 8); ctx.stroke();
+
+    // Barrel — rectangle pointing forward (local -Y)
+    ctx.fillStyle = '#2a2a2a';
+    ctx.fillRect(-3, -13, 6, 12);
+    ctx.fillStyle = '#444';
+    ctx.fillRect(-2.5, -12, 5, 10);
+    // Muzzle ring
+    ctx.strokeStyle = '#666'; ctx.lineWidth = 1;
+    ctx.strokeRect(-3, -13, 6, 2);
+
+    ctx.restore();
+  }
 }
 
 // Darken a hex color for hats and shadow details
