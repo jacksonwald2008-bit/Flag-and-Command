@@ -206,14 +206,14 @@ function _buildArmy(defs, team, zone) {
   const n       = defs.length;
   const facing  = team === TEAM_PLAYER ? 0 : Math.PI; // north or south
 
-  // Space units evenly, starting from left edge of deployment zone
-  const spacing = Math.min(zone.w / Math.max(n, 1), 120); // max 120m gap
-  const startX  = zone.x + spacing * 0.5;
+  // Space units evenly, centered on the X axis of the deployment zone
+  const spacing  = Math.min(zone.w / Math.max(n, 1), 120);
+  const totalSpan = (n - 1) * spacing;
+  const startX   = zone.x + zone.w / 2 - totalSpan / 2;
 
   for (let i = 0; i < n; i++) {
     const x = startX + i * spacing;
-    // Shift toward the back of the zone so the formation + flag visually centers
-    const y = zone.y + zone.h * (team === TEAM_PLAYER ? 0.65 : 0.35);
+    const y = zone.y + zone.h / 2;
     units.push(new Unit(defs[i], team, x, y, facing));
   }
   return units;
