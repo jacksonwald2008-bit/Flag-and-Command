@@ -144,12 +144,24 @@ export class InputHandler {
       this._rmDown = false;
       game.formationDraw = { active: false, corners: null };
 
-      const selectedPlayerUnits = game.selectedUnits.filter(u => u.team === TEAM_PLAYER);
-      if (!selectedPlayerUnits.length) return;
-
       const sdx = e.offsetX - this._rmDownPos.x;
       const sdy = e.offsetY - this._rmDownPos.y;
       const dragDist = Math.sqrt(sdx * sdx + sdy * sdy);
+
+      // Ctrl+right-click: additive select player unit under cursor
+      if (e.ctrlKey && dragDist < DRAG_THRESHOLD) {
+        const wp   = this._screenToWorld(e);
+        const unit = this._unitAtWorld(wp.x, wp.y, TEAM_PLAYER);
+        if (unit) {
+          const idx = game.selectedUnits.indexOf(unit);
+          if (idx === -1) game.selectedUnits.push(unit);
+          else            game.selectedUnits.splice(idx, 1);
+        }
+        return;
+      }
+
+      const selectedPlayerUnits = game.selectedUnits.filter(u => u.team === TEAM_PLAYER);
+      if (!selectedPlayerUnits.length) return;
 
       if (dragDist < DRAG_THRESHOLD) {
         // Simple right-click: move to point
