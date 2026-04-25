@@ -3,6 +3,7 @@ import {
   WORLD_W, WORLD_H, DEPLOY_ZONE_PLAYER, DEPLOY_ZONE_AI, SS, RANK_DEPTH, SOLDIER_SPACING,
   MUSKET_RANGE, ARTILLERY_RANGE,
 } from '../constants.js';
+import { infantrySprite, cavalrySprite, cannonSprite } from './sprites.js';
 
 const TERRAIN_BG    = '#7ec850'; // brighter cartoon grass
 const SELECTION_CLR = '#ffee00';
@@ -271,16 +272,20 @@ export class Renderer {
       }
 
       if (unit.stats.isArtillery) {
-        _drawCannons(ctx, sx, sy, unit.facing, teamColor, cam);
+        _drawCannonSprites(ctx, sx, sy, unit.facing, cam);
       } else if (unit.stats.isCavalry) {
+        const sprite = cavalrySprite(teamColor);
+        const sw = cam.wLen(10), sh = sw * (34 / 22);
         for (const s of unit.soldiers) {
           if (s.state === SS.DEAD) continue;
-          _drawHorse(ctx, cam.wx(s.x), cam.wy(s.y), unit.facing, teamColor);
+          _drawSprite(ctx, sprite, cam.wx(s.x), cam.wy(s.y), unit.facing, sw, sh, teamColor);
         }
       } else {
+        const sprite = infantrySprite(teamColor);
+        const sw = cam.wLen(5), sh = sw * (28 / 20);
         for (const s of unit.soldiers) {
           if (s.state === SS.DEAD) continue;
-          _drawSoldierLOD(ctx, cam.wx(s.x), cam.wy(s.y), unit.facing, teamColor, darkColor, cam.scale);
+          _drawSprite(ctx, sprite, cam.wx(s.x), cam.wy(s.y), unit.facing, sw, sh, teamColor);
         }
       }
     }
@@ -772,59 +777,30 @@ function _drawSoldierLOD(ctx, sx, sy, facing, uniformColor, darkColor, scale) {
   ctx.beginPath(); ctx.arc(sx, sy, 4, 0, Math.PI * 2); ctx.fill();
 }
 
-// ── Cavalry: horse silhouette ────────────────────────────────────────
-function _drawHorse(ctx, sx, sy, facing, color) {
+// ── Sprite helper — draws image centered, rotated to facing ──────────
+function _drawSprite(ctx, img, sx, sy, facing, sw, sh, fallbackColor) {
   ctx.save();
   ctx.translate(sx, sy);
   ctx.rotate(facing);
-  // Body — elongated oval along forward (-Y) axis
-  ctx.fillStyle = '#111';
-  ctx.beginPath(); ctx.ellipse(0, -1, 4, 7, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = color;
-  ctx.beginPath(); ctx.ellipse(0, -1, 3.5, 6, 0, 0, Math.PI * 2); ctx.fill();
-  // Head — small circle at the front
-  ctx.fillStyle = '#111';
-  ctx.beginPath(); ctx.arc(0, -8, 2.5, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = color;
-  ctx.beginPath(); ctx.arc(0, -8, 2, 0, Math.PI * 2); ctx.fill();
+  if (img.complete && img.naturalWidth > 0) {
+    ctx.drawImage(img, -sw / 2, -sh / 2, sw, sh);
+  } else {
+    ctx.fillStyle = fallbackColor;
+    ctx.beginPath(); ctx.arc(0, 0, sw / 2, 0, Math.PI * 2); ctx.fill();
+  }
   ctx.restore();
 }
 
-// ── Artillery: 4 cannon shapes side by side ──────────────────────────
-function _drawCannons(ctx, sx, sy, facing, color, cam) {
-  const gap    = cam.wLen(14); // screen-space gap between cannons
-  const rtX    = Math.cos(facing);
-  const rtY    = Math.sin(facing);
+// ── Artillery: 4 cannon sprites side by side ─────────────────────────
+function _drawCannonSprites(ctx, sx, sy, facing, cam) {
+  const sprite = cannonSprite();
+  const sw     = cam.wLen(13), sh = sw * (32 / 26);
+  const gap    = cam.wLen(15);
+  const rtX    = Math.cos(facing), rtY = Math.sin(facing);
 
   for (let i = 0; i < 4; i++) {
-    const offset = (i - 1.5) * gap;
-    const cx = sx + rtX * offset;
-    const cy = sy + rtY * offset;
-
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(facing);
-
-    // Wheel
-    ctx.fillStyle = '#5a3010';
-    ctx.beginPath(); ctx.arc(0, 2, 6, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
-    ctx.stroke();
-    // Spoke cross
-    ctx.strokeStyle = '#3a1a00'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(-6, 2); ctx.lineTo(6, 2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(0, 8); ctx.stroke();
-
-    // Barrel — rectangle pointing forward (local -Y)
-    ctx.fillStyle = '#2a2a2a';
-    ctx.fillRect(-3, -13, 6, 12);
-    ctx.fillStyle = '#444';
-    ctx.fillRect(-2.5, -12, 5, 10);
-    // Muzzle ring
-    ctx.strokeStyle = '#666'; ctx.lineWidth = 1;
-    ctx.strokeRect(-3, -13, 6, 2);
-
-    ctx.restore();
+    const off = (i - 1.5) * gap;
+    _drawSprite(ctx, sprite, sx + rtX * off, sy + rtY * off, facing, sw, sh, '#555');
   }
 }
 
