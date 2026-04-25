@@ -1,7 +1,8 @@
 import { TEAM_PLAYER, CAMERA_PAN_SPEED, SOLDIER_SPACING, RANK_DEPTH } from '../constants.js';
 import { moveToPoint } from './formation.js';
 
-const DRAG_THRESHOLD = 8; // pixels before treating as drag
+const DRAG_THRESHOLD  = 8;  // pixels before treating as drag
+const FORMATION_GAP   = 20; // world units of space between units in a group drag
 
 export class InputHandler {
   constructor(canvas, game) {
@@ -133,7 +134,7 @@ export class InputHandler {
       } else {
         // Single click — select unit under cursor or deselect
         const wp = this._screenToWorld(e);
-        this._singleSelect(wp.x, wp.y, e.shiftKey || e.ctrlKey);
+        this._singleSelect(wp.x, wp.y, e.ctrlKey);
       }
       this._boxStart = null;
       this._boxEnd   = null;
@@ -185,13 +186,15 @@ export class InputHandler {
     const len = Math.hypot(dx, dy);
     if (len < 1) return { active: false, corners: null };
 
-    const N = units.length;
+    const N        = units.length;
+    const totalGap = FORMATION_GAP * (N - 1);
 
-    // Clamp drag length: max = min-2-rank width per unit, min = 4-file width
-    const minLen = N * 4 * SOLDIER_SPACING;
+    // Clamp drag length accounting for inter-unit gaps
+    const minLen = N * 4 * SOLDIER_SPACING + totalGap;
     const maxLen = Math.max(minLen,
-      units.reduce((s, u) => s + Math.ceil(u.aliveCount / 2), 0) * SOLDIER_SPACING);
+      units.reduce((s, u) => s + Math.ceil(u.aliveCount / 2), 0) * SOLDIER_SPACING + totalGap);
     const clampedLen = Math.max(minLen, Math.min(maxLen, len));
+    const sliceW = (clampedLen - totalGap) / N; // width available to each unit
 
     // Clamped front-right point
     const fr = {
@@ -212,7 +215,7 @@ export class InputHandler {
 
     let maxRanks = 2;
     for (let i = 0; i < N; i++) {
-      const files = Math.max(4, Math.floor((clampedLen / N) / SOLDIER_SPACING));
+      const files = Math.max(4, Math.floor(sliceW / SOLDIER_SPACING));
       const ranks = Math.max(2, Math.ceil(units[i].aliveCount / files));
       if (ranks > maxRanks) maxRanks = ranks;
     }
@@ -225,23 +228,22 @@ export class InputHandler {
       { x: fl.x + bx * depth, y: fl.y + by * depth },
     ];
 
-    // Ghost soldier positions for preview dots
+    // Ghost soldier positions — each unit centered within its spaced slice
+    const dirX = dx / len, dirY = dy / len;
     const ghosts = [];
     for (let i = 0; i < N; i++) {
-      const t  = (i + 0.5) / N;
-      const cx = fl.x + (fr.x - fl.x) * t;
-      const cy = fl.y + (fr.y - fl.y) * t;
-      const sliceW   = clampedLen / N;
-      const files    = Math.max(4, Math.floor(sliceW / SOLDIER_SPACING));
-      const ranks    = Math.max(2, Math.ceil(units[i].aliveCount / files));
-      const alive    = units[i].aliveCount;
-      const perRank  = Math.ceil(alive / ranks);
-      const step     = 1;
+      const offset = i * (sliceW + FORMATION_GAP) + sliceW / 2;
+      const cx = fl.x + dirX * offset;
+      const cy = fl.y + dirY * offset;
+      const files   = Math.max(4, Math.floor(sliceW / SOLDIER_SPACING));
+      const ranks   = Math.max(2, Math.ceil(units[i].aliveCount / files));
+      const alive   = units[i].aliveCount;
+      const perRank = Math.ceil(alive / ranks);
 
       for (let r = 0; r < ranks; r++) {
         const rankCount = Math.min(perRank, alive - r * perRank);
         if (rankCount <= 0) break;
-        for (let f = 0; f < rankCount; f += step) {
+        for (let f = 0; f < rankCount; f++) {
           const offR = (f - (rankCount - 1) / 2) * SOLDIER_SPACING;
           const offB = r * RANK_DEPTH;
           ghosts.push({
@@ -265,17 +267,18 @@ export class InputHandler {
     const { frontLeft: fl, frontRight: fr, facing, dragLen } = fd;
     const dx = fr.x - fl.x;
     const dy = fr.y - fl.y;
-    const N  = units.length;
+    const N        = units.length;
+    const totalGap = FORMATION_GAP * (N - 1);
+    const sliceW   = (dragLen - totalGap) / N;
+    const dirX     = dx / dragLen, dirY = dy / dragLen;
 
     for (let i = 0; i < N; i++) {
-      const t0 = i / N;
-      const t1 = (i + 1) / N;
-      const cx = fl.x + dx * (t0 + t1) / 2;
-      const cy = fl.y + dy * (t0 + t1) / 2;
+      const offset = i * (sliceW + FORMATION_GAP) + sliceW / 2;
+      const cx = fl.x + dirX * offset;
+      const cy = fl.y + dirY * offset;
 
-      const sliceW = dragLen / N;
-      const files  = Math.max(4, Math.floor(sliceW / SOLDIER_SPACING));
-      const ranks  = Math.max(2, Math.ceil(units[i].aliveCount / files));
+      const files = Math.max(4, Math.floor(sliceW / SOLDIER_SPACING));
+      const ranks = Math.max(2, Math.ceil(units[i].aliveCount / files));
 
       units[i].currentRanks = ranks;
       units[i].moveTo(cx, cy, facing);
