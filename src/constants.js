@@ -167,7 +167,7 @@ export const UNIT_STATS = {
   },
   artillery: {
     name: 'Artillery', cost: 5,
-    soldierCount: 48, cannonCount: 4, ranks: 1,
+    soldierCount: 48, cannonCount: 4, ranks: 4,
     morale: 60, accuracy: 0.80, meleeDmg: 1.0,
     speed: 0.8, reloadTime: 8.0, moraleThreshold: 0.50,
     chargeBonus: 0, armor: 0.05,
